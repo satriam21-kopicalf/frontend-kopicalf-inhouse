@@ -1,0 +1,57 @@
+id,company_id,esb_id,code,name,type_name,flag_active,category_type_id,notes,raw_data,synced_at,updated_at
+1,3,20,,EXP GAS,Non Inventory,true,2,,{},2026-08-21 18:25:32.804156+00,2026-08-21 18:36:18.101703+00
+2,3,11,,Finished Good,Inventory,true,1,,{},2026-08-21 18:25:32.804156+00,2026-08-21 18:36:18.101703+00
+3,3,12,,General,Inventory,true,1,,{},2026-08-21 18:25:32.804156+00,2026-08-21 18:36:18.101703+00
+4,3,13,,Green Beans,Inventory,true,1,,{},2026-08-21 18:25:32.804156+00,2026-08-21 18:36:18.101703+00
+5,3,14,,KITCHENWARE & SUPPLIES,Inventory,true,1,,{},2026-08-21 18:25:32.804156+00,2026-08-21 18:36:18.101703+00
+6,3,15,,PACKAGING,Inventory,true,1,,{},2026-08-21 18:25:32.804156+00,2026-08-21 18:36:18.101703+00
+7,3,16,,Raw Material,Inventory,true,1,,{},2026-08-21 18:25:32.804156+00,2026-08-21 18:36:18.101703+00
+8,3,17,,RAW MATERIAL FOOD,Inventory,true,1,,{},2026-08-21 18:25:32.804156+00,2026-08-21 18:36:18.101703+00
+9,3,18,,Roasted Beans,Inventory,true,1,,{},2026-08-21 18:25:32.804156+00,2026-08-21 18:36:18.101703+00
+10,3,19,,WIP,Inventory,true,1,,{},2026-08-21 18:25:32.804156+00,2026-08-21 18:36:18.101703+00
+11,4,20,,EXP GAS,Non Inventory,true,2,,{},2026-08-21 18:25:32.804156+00,2026-08-21 18:36:18.101703+00
+12,4,11,,Finished Good,Inventory,true,1,,{},2026-08-21 18:25:32.804156+00,2026-08-21 18:36:18.101703+00
+13,4,23,,FURNITURE,Asset,true,3,RACK WAREHOUSE,{},2026-08-21 18:25:32.804156+00,2026-08-21 18:36:18.101703+00
+14,4,12,,General,Inventory,true,1,,{},2026-08-21 18:25:32.804156+00,2026-08-21 18:36:18.101703+00
+15,4,13,,Green Beans,Inventory,true,1,,{},2026-08-21 18:25:32.804156+00,2026-08-21 18:36:18.101703+00
+16,4,22,,KITCHEN & SUPPLIES (NEW),Inventory,true,1,,{},2026-08-21 18:25:32.804156+00,2026-08-21 18:36:18.101703+00
+17,4,14,,KITCHENWARE & SUPPLIES,Inventory,true,1,,{},2026-08-21 18:25:32.804156+00,2026-08-21 18:36:18.101703+00
+18,4,24,,MERCHANDISE,Inventory,true,1,,{},2026-08-21 18:25:32.804156+00,2026-08-21 18:36:18.101703+00
+19,4,15,,PACKAGING,Inventory,true,1,,{},2026-08-21 18:25:32.804156+00,2026-08-21 18:36:18.101703+00
+20,4,16,,Raw Material,Inventory,true,1,,{},2026-08-21 18:25:32.804156+00,2026-08-21 18:36:18.101703+00
+21,4,17,,RAW MATERIAL FOOD,Inventory,true,1,,{},2026-08-21 18:25:32.804156+00,2026-08-21 18:36:18.101703+00
+22,4,18,,Roasted Beans,Inventory,true,1,,{},2026-08-21 18:25:32.804156+00,2026-08-21 18:36:18.101703+00
+23,4,21,,TOOLS,Inventory,true,1,,{},2026-08-21 18:25:32.804156+00,2026-08-21 18:36:18.101703+00
+24,4,19,,WIP,Inventory,true,1,,{},2026-08-21 18:25:32.804156+00,2026-08-21 18:36:18.101703+00
+25,1,28,,Delivery Cost,Non Inventory,true,2,,"{""notes"":"""",""categoryID"":28,""flagActive"":1,""categoryName"":""Delivery Cost"",""categoryTypeID"":2,""categoryTypeName"":""Non Inventory""}",2026-08-21 18:25:32.804156+00,2026-08-28 06:30:03.663321+00
+26,1,33,,EQUIPMENT OFFICE,Asset,true,3,,"{""notes"":null,""categoryID"":33,""flagActive"":1,""categoryName"":""EQUIPMENT OFFICE"",""categoryTypeID"":3,""categoryTypeName"":""Asset""}",2026-08-21 18:25:32.804156+00,2026-08-28 06:30:03.663321+00
+27,1,36,,EQUIPMENT OUTLET,Asset,true,3,,"{""notes"":null,""categoryID"":36,""flagActive"":1,""categoryName"":""EQUIPMENT OUTLET"",""categoryTypeID"":3,""categoryTypeName"":""Asset""}",2026-08-21 18:25:32.804156+00,2026-08-28 06:30:03.663321+00
+28,1,25,,EXP GAS,Non Inventory,true,2,,"{""notes"":"""",""categoryID"":25,""flagActive"":1,""categoryName"":""EXP GAS"",""categoryTypeID"":2,""categoryTypeName"":""Non Inventory""}",2026-08-21 18:25:32.804156+00,2026-08-28 06:30:03.663321+00
+29,1,18,,Finished Good,Inventory,true,1,,"{""notes"":"""",""categoryID"":18,""flagActive"":1,""categoryName"":""Finished Good"",""categoryTypeID"":1,""categoryTypeName"":""Inventory""}",2026-08-21 18:25:32.804156+00,2026-08-28 06:30:03.663321+00
+30,1,26,,General,Non Inventory,true,2,,"{""notes"":"""",""categoryID"":26,""flagActive"":1,""categoryName"":""General"",""categoryTypeID"":2,""categoryTypeName"":""Non Inventory""}",2026-08-21 18:25:32.804156+00,2026-08-28 06:30:03.663321+00
+31,1,19,,Green Beans,Inventory,true,1,,"{""notes"":"""",""categoryID"":19,""flagActive"":1,""categoryName"":""Green Beans"",""categoryTypeID"":1,""categoryTypeName"":""Inventory""}",2026-08-21 18:25:32.804156+00,2026-08-28 06:30:03.663321+00
+32,1,32,,HEAVY TOOLS (MACHINE),Asset,true,3,,"{""notes"":null,""categoryID"":32,""flagActive"":1,""categoryName"":""HEAVY TOOLS (MACHINE)"",""categoryTypeID"":3,""categoryTypeName"":""Asset""}",2026-08-21 18:25:32.804156+00,2026-08-28 06:30:03.663321+00
+33,1,31,,KITCHEN & SUPPLIES (NEW),Inventory,true,1,,"{""notes"":null,""categoryID"":31,""flagActive"":1,""categoryName"":""KITCHEN & SUPPLIES (NEW)"",""categoryTypeID"":1,""categoryTypeName"":""Inventory""}",2026-08-21 18:25:32.804156+00,2026-08-28 06:30:03.663321+00
+34,1,27,,KITCHENWARE & SUPPLIES,Non Inventory,true,2,,"{""notes"":"""",""categoryID"":27,""flagActive"":1,""categoryName"":""KITCHENWARE & SUPPLIES"",""categoryTypeID"":2,""categoryTypeName"":""Non Inventory""}",2026-08-21 18:25:32.804156+00,2026-08-28 06:30:03.663321+00
+35,1,37,,MERCHANDISE,Inventory,true,1,,"{""notes"":null,""categoryID"":37,""flagActive"":1,""categoryName"":""MERCHANDISE"",""categoryTypeID"":1,""categoryTypeName"":""Inventory""}",2026-08-21 18:25:32.804156+00,2026-08-28 06:30:03.663321+00
+36,1,29,,Other Income,Non Inventory,true,2,,"{""notes"":"""",""categoryID"":29,""flagActive"":1,""categoryName"":""Other Income"",""categoryTypeID"":2,""categoryTypeName"":""Non Inventory""}",2026-08-21 18:25:32.804156+00,2026-08-28 06:30:03.663321+00
+37,1,20,,PACKAGING,Inventory,true,1,,"{""notes"":"""",""categoryID"":20,""flagActive"":1,""categoryName"":""PACKAGING"",""categoryTypeID"":1,""categoryTypeName"":""Inventory""}",2026-08-21 18:25:32.804156+00,2026-08-28 06:30:03.663321+00
+38,1,21,,RAW MATERIAL,Inventory,true,1,,"{""notes"":null,""categoryID"":21,""flagActive"":1,""categoryName"":""RAW MATERIAL"",""categoryTypeID"":1,""categoryTypeName"":""Inventory""}",2026-08-21 18:25:32.804156+00,2026-08-28 06:30:03.663321+00
+39,1,22,,RAW MATERIAL FOOD,Inventory,true,1,,"{""notes"":"""",""categoryID"":22,""flagActive"":1,""categoryName"":""RAW MATERIAL FOOD"",""categoryTypeID"":1,""categoryTypeName"":""Inventory""}",2026-08-21 18:25:32.804156+00,2026-08-28 06:30:03.663321+00
+40,1,23,,Roasted Beans,Inventory,true,1,,"{""notes"":"""",""categoryID"":23,""flagActive"":1,""categoryName"":""Roasted Beans"",""categoryTypeID"":1,""categoryTypeName"":""Inventory""}",2026-08-21 18:25:32.804156+00,2026-08-28 06:30:03.663321+00
+41,1,30,,TOOLS,Asset,true,3,,"{""notes"":null,""categoryID"":30,""flagActive"":1,""categoryName"":""TOOLS"",""categoryTypeID"":3,""categoryTypeName"":""Asset""}",2026-08-21 18:25:32.804156+00,2026-08-28 06:30:03.663321+00
+42,1,35,,VEHICLE (COTR),Asset,true,3,,"{""notes"":null,""categoryID"":35,""flagActive"":1,""categoryName"":""VEHICLE (COTR)"",""categoryTypeID"":3,""categoryTypeName"":""Asset""}",2026-08-21 18:25:32.804156+00,2026-08-28 06:30:03.663321+00
+43,1,34,,VEHICLE (MOBIL),Asset,true,3,,"{""notes"":null,""categoryID"":34,""flagActive"":1,""categoryName"":""VEHICLE (MOBIL)"",""categoryTypeID"":3,""categoryTypeName"":""Asset""}",2026-08-21 18:25:32.804156+00,2026-08-28 06:30:03.663321+00
+44,1,24,,WIP,Inventory,true,1,,"{""notes"":"""",""categoryID"":24,""flagActive"":1,""categoryName"":""WIP"",""categoryTypeID"":1,""categoryTypeName"":""Inventory""}",2026-08-21 18:25:32.804156+00,2026-08-28 06:30:03.663321+00
+45,6,20,,EXP GAS,Non Inventory,true,2,,{},2026-08-21 18:25:32.804156+00,2026-08-21 18:36:18.101703+00
+46,6,11,,Finished Good,Inventory,true,1,,{},2026-08-21 18:25:32.804156+00,2026-08-21 18:36:18.101703+00
+47,6,12,,General,Inventory,true,1,,{},2026-08-21 18:25:32.804156+00,2026-08-21 18:36:18.101703+00
+48,6,13,,Green Beans,Inventory,true,1,,{},2026-08-21 18:25:32.804156+00,2026-08-21 18:36:18.101703+00
+49,6,21,,KITCHEN & SUPPLIES (NEW),Inventory,true,1,,{},2026-08-21 18:25:32.804156+00,2026-08-21 18:36:18.101703+00
+50,6,14,,KITCHENWARE & SUPPLIES,Inventory,true,1,,{},2026-08-21 18:25:32.804156+00,2026-08-21 18:36:18.101703+00
+51,6,15,,PACKAGING,Inventory,true,1,,{},2026-08-21 18:25:32.804156+00,2026-08-21 18:36:18.101703+00
+52,6,16,,Raw Material,Inventory,true,1,,{},2026-08-21 18:25:32.804156+00,2026-08-21 18:36:18.101703+00
+53,6,17,,RAW MATERIAL FOOD,Inventory,true,1,,{},2026-08-21 18:25:32.804156+00,2026-08-21 18:36:18.101703+00
+54,6,18,,Roasted Beans,Inventory,true,1,,{},2026-08-21 18:25:32.804156+00,2026-08-21 18:36:18.101703+00
+55,6,22,,TOOLS,Inventory,true,1,,{},2026-08-21 18:25:32.804156+00,2026-08-21 18:36:18.101703+00
+56,6,19,,WIP,Inventory,true,1,,{},2026-08-21 18:25:32.804156+00,2026-08-21 18:36:18.101703+00
