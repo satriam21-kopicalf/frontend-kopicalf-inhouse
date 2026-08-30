@@ -1,46 +1,29 @@
 import { createTheme } from '@mui/material/styles';
 
 // ============================================================================
-// BRAND PALETTE — Kopi Calf Internal
+// BRAND PALETTE — Kopi Calf Internal (dark blue, white & red)
 // ============================================================================
 type BrandScale = {
   50: string; 100: string; 200: string; 300: string; 400: string;
   500: string; 600: string; 700: string; 800: string; 900: string; 950: string;
 };
 
-const deepTwilight: BrandScale = {
-  50: '#e6e7fe', 100: '#cecefd', 200: '#9c9efc', 300: '#6b6dfa', 400: '#393cf9',
-  500: '#080cf7', 600: '#0609c6', 700: '#050794', 800: '#030563', 900: '#020231', 950: '#010223',
+// Dark navy blue scale
+const kopiNavy: BrandScale = {
+  50: '#e8edf5', 100: '#c5d1e6', 200: '#9fb3d6', 300: '#7895c5', 400: '#5c7cb8',
+  500: '#3D63AB', 600: '#0D2B5E', 700: '#091C42', 800: '#071336', 900: '#050B28', 950: '#03071A',
 };
 
-const frenchBlue: BrandScale = {
-  50: '#e6f1ff', 100: '#cde2fe', 200: '#9bc5fd', 300: '#68a9fd', 400: '#368cfc',
-  500: '#046ffb', 600: '#0359c9', 700: '#024397', 800: '#022c64', 900: '#011632', 950: '#011023',
+// Mid blue scale
+const kopiBlue: BrandScale = {
+  50: '#e6effe', 100: '#bdd7fc', 200: '#8fbdf9', 300: '#61a3f7', 400: '#3d8ff4',
+  500: '#1E5799', 600: '#184a8a', 700: '#123b7a', 800: '#0c2c6b', 900: '#061d5c', 950: '#03104d',
 };
 
-const brightTealBlue: BrandScale = {
-  50: '#e5f6ff', 100: '#ccedff', 200: '#99dbff', 300: '#66c9ff', 400: '#33b8ff',
-  500: '#00a6ff', 600: '#0085cc', 700: '#006399', 800: '#004266', 900: '#002133', 950: '#001724',
-};
-
-const blueGreen: BrandScale = {
-  50: '#e5f9ff', 100: '#ccf2ff', 200: '#99e6ff', 300: '#66d9ff', 400: '#33ccff',
-  500: '#00bfff', 600: '#0099cc', 700: '#007399', 800: '#004d66', 900: '#002633', 950: '#001b24',
-};
-
-const turquoiseSurf: BrandScale = {
-  50: '#e5fbff', 100: '#ccf6ff', 200: '#99eeff', 300: '#66e5ff', 400: '#33ddff',
-  500: '#00d4ff', 600: '#00aacc', 700: '#007f99', 800: '#005566', 900: '#002a33', 950: '#001e24',
-};
-
-const skyAqua: BrandScale = {
-  50: '#e9f9fc', 100: '#d3f2f8', 200: '#a6e5f2', 300: '#7ad8eb', 400: '#4ecbe4',
-  500: '#21bede', 600: '#1b98b1', 700: '#147285', 800: '#0d4c59', 900: '#07262c', 950: '#051b1f',
-};
-
-const lightCyan: BrandScale = {
-  50: '#e8f9fc', 100: '#d2f3f9', 200: '#a5e6f3', 300: '#78daed', 400: '#4acde8',
-  500: '#1dc1e2', 600: '#179ab5', 700: '#127487', 800: '#0c4d5a', 900: '#06272d', 950: '#041b20',
+// Sky blue accent
+const kopiSky: BrandScale = {
+  50: '#e8f5fe', 100: '#c5e4fc', 200: '#9fd1fa', 300: '#79bef8', 400: '#5db0f6',
+  500: '#1E88E5', 600: '#1565C0', 700: '#0D47A1', 800: '#083078', 900: '#031950', 950: '#021142',
 };
 
 declare module '@mui/material/styles' {
@@ -56,10 +39,10 @@ declare module '@mui/material/styles' {
   }
 }
 
-/** Signature brand gradient (deep twilight → french blue → turquoise surf) */
-export const BRAND_GRADIENT = 'linear-gradient(135deg, #050794 0%, #046ffb 55%, #00d4ff 100%)';
+/** Signature brand gradient (dark navy → bright blue) */
+export const BRAND_GRADIENT = 'linear-gradient(135deg, #091C42 0%, #0D2B5E 50%, #1E5799 100%)';
 /** Sidebar/hero gradient variant */
-export const BRAND_GRADIENT_DARK = 'linear-gradient(160deg, #020231 0%, #050794 45%, #0359c9 100%)';
+export const BRAND_GRADIENT_DARK = 'linear-gradient(160deg, #03071A 0%, #091C42 45%, #0D2B5E 100%)';
 
 // ============================================================================
 // THEME
@@ -69,52 +52,52 @@ const theme = createTheme({
   palette: {
     mode: 'light',
     primary: {
-      ...deepTwilight,
-      main: deepTwilight[600],
-      light: deepTwilight[400],
-      dark: deepTwilight[800],
+      ...kopiNavy,
+      main: kopiNavy[600],
+      light: kopiNavy[400],
+      dark: kopiNavy[800],
       contrastText: '#ffffff',
     },
     secondary: {
-      ...frenchBlue,
-      main: frenchBlue[500],
-      light: frenchBlue[300],
-      dark: frenchBlue[700],
+      ...kopiBlue,
+      main: kopiBlue[500],
+      light: kopiBlue[300],
+      dark: kopiBlue[700],
       contrastText: '#ffffff',
     },
     info: {
-      ...brightTealBlue,
-      main: brightTealBlue[500],
-      light: brightTealBlue[300],
-      dark: brightTealBlue[700],
+      ...kopiSky,
+      main: kopiSky[500],
+      light: kopiSky[300],
+      dark: kopiSky[700],
       contrastText: '#ffffff',
     },
     teal: {
-      ...turquoiseSurf,
-      main: turquoiseSurf[500],
-      light: turquoiseSurf[300],
-      dark: turquoiseSurf[700],
-      contrastText: '#002a33',
+      ...kopiSky,
+      main: kopiSky[500],
+      light: kopiSky[300],
+      dark: kopiSky[700],
+      contrastText: '#ffffff',
     },
     aqua: {
-      ...skyAqua,
-      main: skyAqua[500],
-      light: skyAqua[300],
-      dark: skyAqua[700],
+      ...kopiSky,
+      main: kopiSky[500],
+      light: kopiSky[300],
+      dark: kopiSky[700],
       contrastText: '#ffffff',
     },
     cyan: {
-      ...lightCyan,
-      main: lightCyan[500],
-      light: lightCyan[300],
-      dark: lightCyan[700],
+      ...kopiSky,
+      main: kopiSky[500],
+      light: kopiSky[300],
+      dark: kopiSky[700],
       contrastText: '#ffffff',
     },
     success: { main: '#2e7d32' },
     warning: { main: '#ed6c02' },
-    error: { main: '#d32f2f' },
+    error: { main: '#C62828' },
     background: {
-      default: '#f7f9fc',
+      default: '#F0F4FA',
       paper: '#ffffff',
     },
   },

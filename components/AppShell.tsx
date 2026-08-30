@@ -50,20 +50,22 @@ const HEADER_HEIGHT = 72;
 const BOTTOM_NAV_HEIGHT = 56;
 const BOTTOM_NAV_MORE = '__more__';
 
-// ── Kopi Calf brand colors ────────────────────────────────────────────────────
+// ── Kopi Calf brand colors — dark blue, white & red ─────────────────────────
 const C = {
-  primary:      '#6F4E37',  // Espresso brown
-  primaryDark:   '#4A3226',  // Dark roast — header bg
-  primaryLight:  '#8B6352',  // Light roast — hover
-  accent:        '#C19A6B',  // Caramel — borders / dividers
-  accentLight:   '#E8D9C5',  // Cream — subtle bg
+  primary:      '#0D2B5E',  // Dark navy blue — primary actions
+  primaryDark:  '#091C42',  // Deep navy — header bg
+  primaryLight:  '#1A4080',  // Medium navy — hover states
+  accent:        '#1E5799',  // Bright blue — accents / borders
+  accentLight:   '#E8EEF6',  // Very light blue — subtle bg
   textActive:    '#FFFFFF',  // White text on active
-  textPrimary:   '#3D2B1F',  // Dark brown text
-  textSecondary: '#8B7355',  // Muted brown
+  textPrimary:   '#0D2B5E',  // Dark navy text
+  textSecondary: '#5A7BA6',  // Muted blue
   bg:            '#FFFFFF',  // White sidebar body
-  bgHover:       '#FAF5EE',  // Very light cream hover
-  bgActive:      '#6F4E37',  // Espresso active bg
-  divider:       '#E0D0C0',  // Light brown divider
+  bgHover:       '#F0F4FA',  // Very light blue hover
+  bgActive:      '#0D2B5E',  // Dark navy active bg
+  divider:       '#D6E0EF',  // Light blue divider
+  danger:        '#C62828',  // Red — danger/delete
+  dangerLight:   '#FFEBEE',  // Light red bg
 };
 
 const LABEL_MAP: Record<string, string> = {
@@ -465,7 +467,7 @@ function DesktopSidebar({
       <Box sx={{
         flexShrink: 0,
         borderTop: `1px solid ${C.divider}`,
-        bgcolor: '#FAF8F5',
+        bgcolor: C.accentLight,
       }}>
         {/* User profile */}
         <Box sx={{
@@ -582,7 +584,7 @@ function MobileSidebar({ onNavigate }: { onNavigate?: () => void }) {
       {/* Account */}
       <Box sx={{
         borderTop: `1px solid ${C.divider}`, px: 1.5, py: 1.25,
-        flexShrink: 0, bgcolor: '#FAF8F5',
+        flexShrink: 0, bgcolor: C.accentLight,
       }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <Avatar sx={{
@@ -652,7 +654,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const sidebarWidth = desktopCollapsed ? COLLAPSED_WIDTH : DRAWER_WIDTH;
 
   return (
-    <Box sx={{ display: 'flex', minHeight: '100dvh', bgcolor: '#FAF7F2' }}>
+    <Box sx={{ display: 'flex', minHeight: '100dvh', bgcolor: 'background.default' }}>
       {/* Desktop sidebar */}
       {!isMobile && (
         <Box sx={{
@@ -723,7 +725,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         {/* Page content */}
         <Box sx={{
           flexGrow: 1, p: { xs: 2, sm: 3 },
-          bgcolor: '#FAF7F2', overflowX: 'hidden',
+          bgcolor: 'background.default', overflowX: 'hidden',
           pb: { xs: `${BOTTOM_NAV_HEIGHT + 16}px`, md: 3 },
         }}>
           {children}

@@ -257,47 +257,56 @@ export default function StockSystemPage() {
         <TableContainer sx={{ flex: 1, maxHeight: 'calc(100vh - 280px)' }}>
           <Table size="small" stickyHeader>
             <TableHead>
-              <TableRow sx={{ bgcolor: 'grey.900' }}>
-                <TableCell sx={{ color: 'grey.100', fontWeight: 700, fontSize: 12, whiteSpace: 'nowrap', position: 'sticky', left: 0, bgcolor: 'grey.900', zIndex: 3, minWidth: 110 }}>
+              <TableRow sx={{ bgcolor: 'primary.dark' }}>
+                <TableCell sx={{ color: 'white', fontWeight: 700, fontSize: 12, whiteSpace: 'nowrap', position: 'sticky', left: 0, bgcolor: 'primary.dark', zIndex: 3, minWidth: 110 }}>
                   Code
                 </TableCell>
-                <TableCell sx={{ color: 'grey.100', fontWeight: 700, fontSize: 12, minWidth: 200 }}>
+                <TableCell sx={{ color: 'white', fontWeight: 700, fontSize: 12, minWidth: 200 }}>
                   Product Name
                 </TableCell>
-                <TableCell sx={{ color: 'grey.100', fontWeight: 700, fontSize: 12, whiteSpace: 'nowrap', textAlign: 'center', minWidth: 120 }}>
+                <TableCell sx={{ color: 'white', fontWeight: 700, fontSize: 12, whiteSpace: 'nowrap', textAlign: 'center', minWidth: 120 }}>
                   Category
                 </TableCell>
-                <TableCell sx={{ color: 'grey.100', fontWeight: 700, fontSize: 12, whiteSpace: 'nowrap', textAlign: 'center', minWidth: 100 }}>
+                <TableCell sx={{ color: 'white', fontWeight: 700, fontSize: 12, whiteSpace: 'nowrap', textAlign: 'center', minWidth: 100 }}>
                   Type
                 </TableCell>
-                <TableCell sx={{ color: 'grey.100', fontWeight: 700, fontSize: 12, whiteSpace: 'nowrap', textAlign: 'center', minWidth: 70 }}>
+                <TableCell sx={{ color: 'white', fontWeight: 700, fontSize: 12, whiteSpace: 'nowrap', textAlign: 'center', minWidth: 70 }}>
                   Unit
                 </TableCell>
                 {/* Outlet column */}
                 <TableCell
                   sx={{
-                    color: 'grey.100', fontWeight: 700, fontSize: 12, whiteSpace: 'nowrap', textAlign: 'center',
-                    bgcolor: '#1565c0', minWidth: 160,
+                    color: 'white', fontWeight: 700, fontSize: 12, whiteSpace: 'nowrap', textAlign: 'center',
+                    bgcolor: '#0D2B5E', minWidth: 170,
                     position: 'sticky', right: 274, zIndex: 2,
                   }}
                 >
                   <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5 }}>
                     <StoreIcon sx={{ fontSize: 13 }} />
                     <Typography variant="caption" sx={{ lineHeight: 1, fontWeight: 700 }}>Outlet</Typography>
-                    <FormControl size="small" sx={{ minWidth: 110 }}>
+                    <FormControl size="small" sx={{ minWidth: 120 }}>
                       <Select
                         value={selectedOutletBranch}
                         onChange={(e) => setSelectedOutletBranch(Number(e.target.value))}
                         sx={{
-                          color: 'white', fontSize: 11, height: 24,
-                          '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.4)' },
+                          color: 'white', fontSize: 11, height: 26,
+                          bgcolor: 'rgba(255,255,255,0.12)',
+                          '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.35)' },
                           '& .MuiSvgIcon-root': { color: 'white', fontSize: 12 },
-                          '.MuiSelect-select': { py: 0.25 },
+                          '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.7)' },
+                          '.MuiSelect-select': { py: 0.3 },
+                        }}
+                        renderValue={(val) => {
+                          const b = OUTLET_BRANCHES.find((x) => x.branchID === val);
+                          return <Typography sx={{ fontSize: 11, lineHeight: 1, fontWeight: 600 }}>{b?.branchName ?? 'Select'}</Typography>;
                         }}
                       >
                         {OUTLET_BRANCHES.map((b) => (
-                          <MenuItem key={b.branchID} value={b.branchID} sx={{ fontSize: 11.5 }}>
-                            {b.branchName}
+                          <MenuItem key={b.branchID} value={b.branchID} sx={{ fontSize: 12, py: 0.75 }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                              <StoreIcon sx={{ fontSize: 14, color: '#0D2B5E' }} />
+                              {b.branchName}
+                            </Box>
                           </MenuItem>
                         ))}
                       </Select>
@@ -307,28 +316,37 @@ export default function StockSystemPage() {
                 {/* Hub WH column */}
                 <TableCell
                   sx={{
-                    color: 'grey.100', fontWeight: 700, fontSize: 12, whiteSpace: 'nowrap', textAlign: 'center',
-                    bgcolor: '#0277bd', minWidth: 160,
+                    color: 'white', fontWeight: 700, fontSize: 12, whiteSpace: 'nowrap', textAlign: 'center',
+                    bgcolor: '#1A4080', minWidth: 170,
                     position: 'sticky', right: 114, zIndex: 2,
                   }}
                 >
                   <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5 }}>
                     <WarehouseIcon sx={{ fontSize: 13 }} />
                     <Typography variant="caption" sx={{ lineHeight: 1, fontWeight: 700 }}>Hub WH</Typography>
-                    <FormControl size="small" sx={{ minWidth: 110 }}>
+                    <FormControl size="small" sx={{ minWidth: 120 }}>
                       <Select
                         value={selectedHubWhBranch}
                         onChange={(e) => setSelectedHubWhBranch(Number(e.target.value))}
                         sx={{
-                          color: 'white', fontSize: 11, height: 24,
-                          '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.4)' },
+                          color: 'white', fontSize: 11, height: 26,
+                          bgcolor: 'rgba(255,255,255,0.12)',
+                          '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.35)' },
                           '& .MuiSvgIcon-root': { color: 'white', fontSize: 12 },
-                          '.MuiSelect-select': { py: 0.25 },
+                          '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.7)' },
+                          '.MuiSelect-select': { py: 0.3 },
+                        }}
+                        renderValue={(val) => {
+                          const b = HUB_WH_BRANCHES.find((x) => x.branchID === val);
+                          return <Typography sx={{ fontSize: 11, lineHeight: 1, fontWeight: 600 }}>{b?.branchName ?? 'Select'}</Typography>;
                         }}
                       >
                         {HUB_WH_BRANCHES.map((b) => (
-                          <MenuItem key={b.branchID} value={b.branchID} sx={{ fontSize: 11.5 }}>
-                            {b.branchName}
+                          <MenuItem key={b.branchID} value={b.branchID} sx={{ fontSize: 12, py: 0.75 }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                              <WarehouseIcon sx={{ fontSize: 14, color: '#1A4080' }} />
+                              {b.branchName}
+                            </Box>
                           </MenuItem>
                         ))}
                       </Select>
@@ -338,36 +356,45 @@ export default function StockSystemPage() {
                 {/* Hub CK column */}
                 <TableCell
                   sx={{
-                    color: 'grey.100', fontWeight: 700, fontSize: 12, whiteSpace: 'nowrap', textAlign: 'center',
-                    bgcolor: '#bf360c', minWidth: 180,
+                    color: 'white', fontWeight: 700, fontSize: 12, whiteSpace: 'nowrap', textAlign: 'center',
+                    bgcolor: '#C62828', minWidth: 190,
                     position: 'sticky', right: 0, zIndex: 2,
-                    boxShadow: '-2px 0 4px rgba(0,0,0,0.15)',
+                    boxShadow: '-2px 0 4px rgba(0,0,0,0.2)',
                   }}
                 >
                   <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5 }}>
                     <KitchenIcon sx={{ fontSize: 13 }} />
                     <Typography variant="caption" sx={{ lineHeight: 1, fontWeight: 700 }}>Central Kitchen</Typography>
-                    <FormControl size="small" sx={{ minWidth: 120 }}>
+                    <FormControl size="small" sx={{ minWidth: 130 }}>
                       <Select
                         value={selectedHubCkBranch}
                         onChange={(e) => setSelectedHubCkBranch(Number(e.target.value))}
                         sx={{
-                          color: 'white', fontSize: 11, height: 24,
-                          '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.4)' },
+                          color: 'white', fontSize: 11, height: 26,
+                          bgcolor: 'rgba(255,255,255,0.12)',
+                          '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.35)' },
                           '& .MuiSvgIcon-root': { color: 'white', fontSize: 12 },
-                          '.MuiSelect-select': { py: 0.25 },
+                          '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.7)' },
+                          '.MuiSelect-select': { py: 0.3 },
+                        }}
+                        renderValue={(val) => {
+                          const b = HUB_CK_BRANCHES.find((x) => x.branchID === val);
+                          return <Typography sx={{ fontSize: 11, lineHeight: 1, fontWeight: 600 }}>{b?.branchName ?? 'Select'}</Typography>;
                         }}
                       >
                         {HUB_CK_BRANCHES.map((b) => (
-                          <MenuItem key={b.branchID} value={b.branchID} sx={{ fontSize: 11.5 }}>
-                            {b.branchName}
+                          <MenuItem key={b.branchID} value={b.branchID} sx={{ fontSize: 12, py: 0.75 }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                              <KitchenIcon sx={{ fontSize: 14, color: '#C62828' }} />
+                              {b.branchName}
+                            </Box>
                           </MenuItem>
                         ))}
                       </Select>
                     </FormControl>
                   </Box>
                 </TableCell>
-                <TableCell sx={{ color: 'grey.100', fontWeight: 700, fontSize: 12, whiteSpace: 'nowrap', textAlign: 'center', minWidth: 70 }}>
+                <TableCell sx={{ color: 'white', fontWeight: 700, fontSize: 12, whiteSpace: 'nowrap', textAlign: 'center', minWidth: 70 }}>
                   Status
                 </TableCell>
               </TableRow>

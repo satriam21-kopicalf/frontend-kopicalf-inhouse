@@ -451,27 +451,47 @@ export default function WastePage() {
         </Box>
       </Box>
 
-      {/* ─── Filter Modal ─── */}
-      <Dialog
+      {/* ─── Filter Drawer ─── */}
+      <Drawer
+        anchor="right"
         open={filterModalOpen}
         onClose={() => setFilterModalOpen(false)}
-        maxWidth="sm"
-        fullWidth
         slotProps={{
-          paper: { sx: { borderRadius: 2 } },
+          paper: {
+            sx: {
+              width: { xs: '100vw', sm: 400 },
+              borderRadius: { xs: 0, sm: '16px 0 0 16px' },
+              overflow: 'hidden',
+              display: 'flex',
+              flexDirection: 'column',
+            },
+          },
+          backdrop: { sx: { backdropFilter: 'blur(2px)', backgroundColor: 'rgba(0,0,0,0.4)' } },
         }}
       >
-        <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pb: 1 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <TuneIcon sx={{ fontSize: 18, color: 'primary.main' }} />
-            <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>Filter Options</Typography>
+        {/* Drawer Header */}
+        <Box sx={{
+          px: 3, py: 2,
+          borderBottom: '1px solid',
+          borderColor: 'divider',
+          bgcolor: 'primary.main',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          flexShrink: 0,
+        }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            <TuneIcon sx={{ fontSize: 18, color: 'white' }} />
+            <Typography sx={{ fontWeight: 700, color: 'white', fontSize: 15 }}>
+              Filter Options
+            </Typography>
           </Box>
-          <IconButton size="small" onClick={() => setFilterModalOpen(false)}>
+          <IconButton size="small" onClick={() => setFilterModalOpen(false)} sx={{ color: 'white' }}>
             <CloseIcon fontSize="small" />
           </IconButton>
-        </DialogTitle>
-        <DialogContent dividers>
-          <Stack spacing={2.5} sx={{ pt: 0.5 }}>
+        </Box>
+
+        {/* Drawer Content */}
+        <Box sx={{ flex: 1, overflowY: 'auto', p: 3 }}>
+          <Stack spacing={2.5}>
             {/* Branch */}
             <FormControl size="small" fullWidth>
               <InputLabel>Branch</InputLabel>
@@ -574,20 +594,18 @@ export default function WastePage() {
               </Box>
             </Box>
           </Stack>
-        </DialogContent>
-        <DialogActions sx={{ px: 3, py: 2, gap: 1 }}>
-          <Button variant="outlined" color="inherit" size="small" onClick={clearAllFilters}>
+        </Box>
+
+        {/* Drawer Actions */}
+        <Box sx={{ px: 3, py: 2, borderTop: '1px solid', borderColor: 'divider', display: 'flex', gap: 1, flexShrink: 0, bgcolor: 'background.paper' }}>
+          <Button variant="outlined" color="inherit" size="small" onClick={clearAllFilters} fullWidth>
             Clear All
           </Button>
-          <Box sx={{ flex: 1 }} />
-          <Button variant="outlined" size="small" onClick={() => setFilterModalOpen(false)}>
-            Cancel
-          </Button>
-          <Button variant="contained" size="small" onClick={applyFilterModal}>
+          <Button variant="contained" size="small" onClick={applyFilterModal} fullWidth>
             Apply Filters
           </Button>
-        </DialogActions>
-      </Dialog>
+        </Box>
+      </Drawer>
 
       {/* View Drawer */}
       <Drawer
