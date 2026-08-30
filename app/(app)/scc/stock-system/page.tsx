@@ -177,7 +177,7 @@ export default function StockSystemPage() {
                   variant="body2"
                   sx={{
                     fontWeight: 700, lineHeight: 1.2,
-                    color: s!.highlight ? 'error.main' : 'text.primary',
+                    color: s!.highlight ? '#C62828' : 'text.primary',
                   }}
                 >
                   {s!.value.toLocaleString()}

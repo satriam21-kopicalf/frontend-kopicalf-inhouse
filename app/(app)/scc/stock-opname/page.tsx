@@ -33,10 +33,10 @@ const PERIOD_LABELS: Record<SoPeriodType, string> = {
 };
 
 const STATUS_COLORS: Record<SoStatus, { bg: string; color: string; label: string }> = {
-  draft: { bg: '#f1f5f9', color: '#475569', label: 'Draft' },
-  submitted: { bg: '#dbeafe', color: '#1e40af', label: 'Submitted' },
-  approved: { bg: '#dcfce7', color: '#166534', label: 'Approved' },
-  rejected: { bg: '#fee2e2', color: '#991b1b', label: 'Rejected' },
+  draft: { bg: '#E8EEF6', color: '#0D2B5E', label: 'Draft' },
+  submitted: { bg: '#DBEAFE', color: '#1A4080', label: 'Submitted' },
+  approved: { bg: '#D1FAE5', color: '#065F46', label: 'Approved' },
+  rejected: { bg: '#FEE2E2', color: '#C62828', label: 'Rejected' },
 };
 
 export default function StockOpnamePage() {
@@ -202,12 +202,12 @@ export default function StockOpnamePage() {
       >
         {[
           { label: 'Total Records', value: kpis.total },
-          { label: 'Approved', value: kpis.approved, color: '#166534' },
-          { label: 'Pending', value: kpis.pending, color: '#1e40af' },
+          { label: 'Approved', value: kpis.approved, color: '#065F46' },
+          { label: 'Pending', value: kpis.pending, color: '#1A4080' },
           {
             label: 'Variance',
             value: kpis.variance !== 0 ? fmtCurr(Math.abs(kpis.variance)) : 'Balanced',
-            color: kpis.variance !== 0 ? '#991b1b' : '#166534',
+            color: kpis.variance !== 0 ? '#C62828' : '#065F46',
           },
         ].map((s) => (
           <Box key={s.label} sx={{ minWidth: 90 }}>
@@ -346,11 +346,11 @@ export default function StockOpnamePage() {
         <TableContainer sx={{ maxHeight: 'calc(100vh - 300px)' }}>
           <Table size="small" stickyHeader>
             <TableHead>
-              <TableRow sx={{ bgcolor: 'grey.900' }}>
+              <TableRow sx={{ bgcolor: 'primary.dark' }}>
                 {['#', 'Date', 'Branch', 'Period', 'Items', 'Variance', 'Status', 'PIC', 'Actions'].map((h) => (
                   <TableCell
                     key={h}
-                    sx={{ color: 'grey.100', fontWeight: 700, fontSize: 12, whiteSpace: 'nowrap', bgcolor: 'grey.900' }}
+                    sx={{ color: 'white', fontWeight: 700, fontSize: 12, whiteSpace: 'nowrap', bgcolor: 'primary.dark' }}
                   >
                     {h}
                   </TableCell>
@@ -363,42 +363,42 @@ export default function StockOpnamePage() {
                 return (
                   <TableRow key={r.soId} hover sx={{ '&:last-child td': { border: 0 } }}>
                     <TableCell>
-                      <Typography variant="caption" sx={{ fontFamily: 'monospace', color: 'text.secondary', fontSize: 11 }}>
+                      <Typography variant="caption" sx={{ fontFamily: 'monospace', color: 'primary.main', fontSize: 11.5, fontWeight: 600 }}>
                         {r.soId}
                       </Typography>
                     </TableCell>
                     <TableCell>
-                      <Typography variant="caption" sx={{ fontFamily: 'monospace', fontSize: 12 }}>{r.soDate}</Typography>
+                      <Typography variant="caption" sx={{ fontFamily: 'monospace', fontSize: 12, color: 'text.primary', fontWeight: 500 }}>{r.soDate}</Typography>
                     </TableCell>
                     <TableCell>
-                      <Typography variant="body2" sx={{ fontWeight: 500, fontSize: 13 }}>{r.branchName}</Typography>
+                      <Typography variant="body2" sx={{ fontWeight: 600, fontSize: 13, color: 'text.primary' }}>{r.branchName}</Typography>
                       <Typography
                         variant="caption"
                         sx={{
                           px: 0.75, py: 0.25, borderRadius: 0.5, fontSize: 10, fontWeight: 700,
-                          bgcolor: r.branchType === 'OUTLET' ? '#dbeafe' : r.branchType === 'HUB WH' ? '#fef9c3' : '#f3e5f5',
-                          color: r.branchType === 'OUTLET' ? '#1e40af' : r.branchType === 'HUB WH' ? '#92400e' : '#4a148c',
+                          bgcolor: r.branchType === 'OUTLET' ? '#DBEAFE' : r.branchType === 'HUB WH' ? '#FEF3C7' : '#EDE9FE',
+                          color: r.branchType === 'OUTLET' ? '#1A4080' : r.branchType === 'HUB WH' ? '#92400E' : '#5B21B6',
                         }}
                       >
                         {r.branchType}
                       </Typography>
                     </TableCell>
                     <TableCell>
-                      <Typography variant="caption" sx={{ fontFamily: 'monospace', fontSize: 12 }}>{r.periodLabel}</Typography>
+                      <Typography variant="caption" sx={{ fontFamily: 'monospace', fontSize: 12, color: 'text.primary', fontWeight: 500 }}>{r.periodLabel}</Typography>
                     </TableCell>
                     <TableCell align="center">
-                      <Typography variant="body2" sx={{ fontWeight: 600, fontSize: 13 }}>{detailCount.get(r.soId) ?? 0}</Typography>
+                      <Typography variant="body2" sx={{ fontWeight: 700, fontSize: 13, color: 'text.primary' }}>{detailCount.get(r.soId) ?? 0}</Typography>
                     </TableCell>
                     <TableCell align="right">
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, justifyContent: 'flex-end' }}>
                         {r.varianceValue !== 0 && (
-                          <WarningIcon sx={{ fontSize: 12, color: 'error.main' }} />
+                          <WarningIcon sx={{ fontSize: 12, color: '#C62828' }} />
                         )}
                         <Typography
                           variant="body2"
                           sx={{
-                            fontWeight: 600, fontFamily: 'monospace', fontSize: 12,
-                            color: r.varianceValue !== 0 ? 'error.main' : 'text.primary',
+                            fontWeight: 700, fontFamily: 'monospace', fontSize: 12,
+                            color: r.varianceValue !== 0 ? '#C62828' : '#065F46',
                           }}
                         >
                           {r.varianceValue !== 0 ? fmtCurr(r.varianceValue) : 'Balanced'}
@@ -409,7 +409,7 @@ export default function StockOpnamePage() {
                       <Box
                         component="span"
                         sx={{
-                          px: 1.25, py: 0.375, borderRadius: 1, fontWeight: 600, fontSize: 11,
+                          px: 1.25, py: 0.375, borderRadius: 1, fontWeight: 700, fontSize: 11,
                           display: 'inline-block', bgcolor: sc.bg, color: sc.color,
                         }}
                       >
@@ -417,7 +417,7 @@ export default function StockOpnamePage() {
                       </Box>
                     </TableCell>
                     <TableCell>
-                      <Typography variant="caption" sx={{ fontWeight: 500 }}>{r.submittedBy}</Typography>
+                      <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.primary', fontSize: 12 }}>{r.submittedBy}</Typography>
                     </TableCell>
                     <TableCell align="center">
                       <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'center' }}>
@@ -648,7 +648,7 @@ export default function StockOpnamePage() {
               <Box
                 sx={{
                   display: 'grid', gridTemplateColumns: { xs: '1fr 1fr', sm: 'repeat(4, 1fr)' },
-                  gap: 2, mb: 2.5, p: 2, bgcolor: 'grey.50', borderRadius: 2,
+                  gap: 2, mb: 2.5, p: 2, bgcolor: '#E8EEF6', borderRadius: 2,
                   border: '1px solid', borderColor: 'divider',
                 }}
               >
@@ -678,9 +678,9 @@ export default function StockOpnamePage() {
               <TableContainer sx={{ borderRadius: 2, border: '1px solid', borderColor: 'divider', maxHeight: 520 }}>
                 <Table size="small" stickyHeader>
                   <TableHead>
-                    <TableRow sx={{ bgcolor: 'grey.100' }}>
+                    <TableRow sx={{ bgcolor: '#E8EEF6' }}>
                       {['Product', 'Unit', 'Beg. Bal.', 'Balance', 'Actual', 'Variance', 'Value'].map((h) => (
-                        <TableCell key={h} sx={{ fontWeight: 600, whiteSpace: 'nowrap', fontSize: 12 }}>
+                        <TableCell key={h} sx={{ fontWeight: 700, whiteSpace: 'nowrap', fontSize: 12, color: 'primary.main' }}>
                           {h}
                         </TableCell>
                       ))}

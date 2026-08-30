@@ -25,10 +25,10 @@ const fmtCurr = (n: number) =>
   new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(n);
 
 const STATUS_COLORS: Record<WasteStatus, { bg: string; color: string; label: string }> = {
-  draft: { bg: '#f1f5f9', color: '#475569', label: 'Draft' },
-  submitted: { bg: '#dbeafe', color: '#1e40af', label: 'Submitted' },
-  approved: { bg: '#dcfce7', color: '#166534', label: 'Approved' },
-  rejected: { bg: '#fee2e2', color: '#991b1b', label: 'Rejected' },
+  draft: { bg: '#E8EEF6', color: '#0D2B5E', label: 'Draft' },
+  submitted: { bg: '#DBEAFE', color: '#1A4080', label: 'Submitted' },
+  approved: { bg: '#D1FAE5', color: '#065F46', label: 'Approved' },
+  rejected: { bg: '#FEE2E2', color: '#C62828', label: 'Rejected' },
 };
 
 export default function WastePage() {
@@ -185,9 +185,9 @@ export default function WastePage() {
       >
         {[
           { label: 'Total Records', value: kpis.total },
-          { label: 'Approved', value: kpis.approved, color: '#166534' },
-          { label: 'Pending', value: kpis.pending, color: '#1e40af' },
-          { label: 'Total Loss', value: fmtCurr(kpis.lossValue), color: '#991b1b' },
+          { label: 'Approved', value: kpis.approved, color: '#065F46' },
+          { label: 'Pending', value: kpis.pending, color: '#1A4080' },
+          { label: 'Total Loss', value: fmtCurr(kpis.lossValue), color: '#C62828' },
         ].map((s) => (
           <Box key={s.label} sx={{ minWidth: 90 }}>
             <Typography variant="caption" color="text.secondary" sx={{ display: 'block', lineHeight: 1.2 }}>
@@ -325,11 +325,11 @@ export default function WastePage() {
         <TableContainer sx={{ maxHeight: 'calc(100vh - 300px)' }}>
           <Table size="small" stickyHeader>
             <TableHead>
-              <TableRow sx={{ bgcolor: 'grey.900' }}>
+              <TableRow sx={{ bgcolor: 'primary.dark' }}>
                 {['#', 'Date', 'Branch', 'Items', 'Total Qty', 'Total Value', 'Status', 'PIC', 'Notes', 'Actions'].map((h) => (
                   <TableCell
                     key={h}
-                    sx={{ color: 'grey.100', fontWeight: 700, fontSize: 12, whiteSpace: 'nowrap', bgcolor: 'grey.900' }}
+                    sx={{ color: 'white', fontWeight: 700, fontSize: 12, whiteSpace: 'nowrap', bgcolor: 'primary.dark' }}
                   >
                     {h}
                   </TableCell>
@@ -350,26 +350,26 @@ export default function WastePage() {
                       <Typography variant="caption" sx={{ fontFamily: 'monospace', fontSize: 12 }}>{r.wasteDate}</Typography>
                     </TableCell>
                     <TableCell>
-                      <Typography variant="body2" sx={{ fontWeight: 500, fontSize: 13 }}>{r.branchName}</Typography>
+                      <Typography variant="body2" sx={{ fontWeight: 600, fontSize: 13, color: 'text.primary' }}>{r.branchName}</Typography>
                       <Typography
                         variant="caption"
                         sx={{
                           px: 0.75, py: 0.25, borderRadius: 0.5, fontSize: 10, fontWeight: 700,
-                          bgcolor: r.branchType === 'OUTLET' ? '#dbeafe' : r.branchType === 'HUB WH' ? '#fef9c3' : '#f3e5f5',
-                          color: r.branchType === 'OUTLET' ? '#1e40af' : r.branchType === 'HUB WH' ? '#92400e' : '#4a148c',
+                          bgcolor: r.branchType === 'OUTLET' ? '#DBEAFE' : r.branchType === 'HUB WH' ? '#FEF3C7' : '#EDE9FE',
+                          color: r.branchType === 'OUTLET' ? '#1A4080' : r.branchType === 'HUB WH' ? '#92400E' : '#5B21B6',
                         }}
                       >
                         {r.branchType}
                       </Typography>
                     </TableCell>
                     <TableCell align="center">
-                      <Typography variant="body2" sx={{ fontWeight: 600, fontSize: 13 }}>{detailCount.get(r.wasteId) ?? 0}</Typography>
+                      <Typography variant="body2" sx={{ fontWeight: 600, fontSize: 13, color: 'text.primary' }}>{detailCount.get(r.wasteId) ?? 0}</Typography>
                     </TableCell>
                     <TableCell align="center">
-                      <Typography variant="body2" sx={{ fontFamily: 'monospace', fontWeight: 600, fontSize: 13 }}>{r.totalQty}</Typography>
+                      <Typography variant="body2" sx={{ fontFamily: 'monospace', fontWeight: 600, fontSize: 13, color: 'text.primary' }}>{r.totalQty}</Typography>
                     </TableCell>
                     <TableCell align="right">
-                      <Typography variant="body2" sx={{ fontFamily: 'monospace', fontWeight: 700, color: 'error.main', fontSize: 13 }}>
+                      <Typography variant="body2" sx={{ fontFamily: 'monospace', fontWeight: 700, color: '#C62828', fontSize: 13 }}>
                         {fmtCurr(r.totalValue)}
                       </Typography>
                     </TableCell>
@@ -385,7 +385,7 @@ export default function WastePage() {
                       </Box>
                     </TableCell>
                     <TableCell>
-                      <Typography variant="caption" sx={{ fontWeight: 500 }}>{r.submittedBy}</Typography>
+                      <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.primary', fontSize: 12 }}>{r.submittedBy}</Typography>
                     </TableCell>
                     <TableCell sx={{ maxWidth: 140 }}>
                       <Tooltip title={r.notes || '—'}>
@@ -643,7 +643,7 @@ export default function WastePage() {
               <Box
                 sx={{
                   display: 'grid', gridTemplateColumns: { xs: '1fr 1fr', sm: 'repeat(4, 1fr)' },
-                  gap: 2, mb: 2.5, p: 2, bgcolor: 'grey.50', borderRadius: 2,
+                  gap: 2, mb: 2.5, p: 2, bgcolor: '#E8EEF6', borderRadius: 2,
                   border: '1px solid', borderColor: 'divider',
                 }}
               >
@@ -676,9 +676,9 @@ export default function WastePage() {
               <TableContainer sx={{ borderRadius: 2, border: '1px solid', borderColor: 'divider', maxHeight: 460 }}>
                 <Table size="small" stickyHeader>
                   <TableHead>
-                    <TableRow sx={{ bgcolor: 'grey.100' }}>
+                    <TableRow sx={{ bgcolor: '#E8EEF6' }}>
                       {['Product', 'Unit', 'Qty', 'Unit Price', 'Total', 'Reason'].map((h) => (
-                        <TableCell key={h} sx={{ fontWeight: 600, whiteSpace: 'nowrap', fontSize: 12 }}>{h}</TableCell>
+                        <TableCell key={h} sx={{ fontWeight: 700, whiteSpace: 'nowrap', fontSize: 12, color: 'primary.main' }}>{h}</TableCell>
                       ))}
                     </TableRow>
                   </TableHead>
@@ -716,7 +716,7 @@ export default function WastePage() {
               </TableContainer>
 
               {viewing.notes && (
-                <Box sx={{ mt: 2, p: 1.5, bgcolor: 'grey.50', borderRadius: 1, border: '1px solid', borderColor: 'divider' }}>
+                <Box sx={{ mt: 2, p: 1.5, bgcolor: '#E8EEF6', borderRadius: 1, border: '1px solid', borderColor: 'divider' }}>
                   <Typography variant="caption" color="text.secondary">Notes</Typography>
                   <Typography variant="body2">{viewing.notes}</Typography>
                 </Box>
