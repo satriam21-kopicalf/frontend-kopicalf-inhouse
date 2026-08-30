@@ -29,7 +29,6 @@ export default function LoginPage() {
   const [notificationMsg, setNotificationMsg] = useState('');
   const [progress, setProgress] = useState(0);
 
-  // Animate progress bar on success
   useEffect(() => {
     if (notification === 'success') {
       setProgress(0);
@@ -41,7 +40,7 @@ export default function LoginPage() {
           }
           return p + 2;
         });
-      }, 20); // 100% in ~1 second
+      }, 20);
       return () => clearInterval(interval);
     } else {
       setProgress(0);
@@ -86,243 +85,147 @@ export default function LoginPage() {
         alignItems: 'center',
         justifyContent: 'center',
         p: 2,
-        bgcolor: '#f0f2f5',
-        backgroundImage: `
-          radial-gradient(ellipse at 20% 30%, rgba(79, 70, 229, 0.08) 0%, transparent 50%),
-          radial-gradient(ellipse at 80% 70%, rgba(14, 165, 233, 0.08) 0%, transparent 50%)
-        `,
+        bgcolor: '#f8f9fa',
         position: 'relative',
         overflow: 'hidden',
       }}
     >
-      {/* Background decorative circles */}
-      <Box
-        sx={{
-          position: 'absolute',
-          top: -80,
-          right: -80,
-          width: 300,
-          height: 300,
-          borderRadius: '50%',
-          bgcolor: 'rgba(79, 70, 229, 0.05)',
-          filter: 'blur(40px)',
-          pointerEvents: 'none',
-        }}
-      />
-      <Box
-        sx={{
-          position: 'absolute',
-          bottom: -60,
-          left: -60,
-          width: 240,
-          height: 240,
-          borderRadius: '50%',
-          bgcolor: 'rgba(14, 165, 233, 0.05)',
-          filter: 'blur(40px)',
-          pointerEvents: 'none',
-        }}
-      />
-
-      {/* ─── Notification Banner (Top Right) ─── */}
+      {/* ─── Notification Toast (Top Right) ─── */}
       <Box
         sx={{
           position: 'fixed',
-          top: 24,
-          right: 24,
+          top: 20,
+          right: 20,
           transform: notification
-            ? 'translateX(0) translateY(0)'
-            : 'translateX(120%) translateY(0)',
+            ? 'translateX(0)'
+            : 'translateX(calc(100% + 40px))',
           opacity: notification ? 1 : 0,
-          transition: 'transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease',
+          transition: 'transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease',
           zIndex: 9999,
         }}
       >
-        <Card
-          elevation={8}
+        <Box
           sx={{
-            overflow: 'hidden',
-            borderRadius: 2.5,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1.5,
+            px: 2,
+            py: 1.5,
+            bgcolor: 'background.paper',
+            borderRadius: 2,
             border: '1px solid',
-            borderColor: isSuccess ? 'rgba(34, 197, 94, 0.3)' : 'rgba(239, 68, 68, 0.3)',
-            backdropFilter: 'blur(16px)',
-            WebkitBackdropFilter: 'blur(16px)',
-            bgcolor: 'rgba(255, 255, 255, 0.97)',
-            boxShadow: isSuccess
-              ? '0 8px 40px rgba(34, 197, 94, 0.25), 0 0 0 1px rgba(34, 197, 94, 0.1)'
-              : '0 8px 40px rgba(239, 68, 68, 0.25), 0 0 0 1px rgba(239, 68, 68, 0.1)',
-            minWidth: 320,
-            maxWidth: 380,
+            borderColor: isSuccess ? 'success.light' : 'error.light',
+            borderLeft: '3px solid',
+            borderLeftColor: isSuccess ? 'success.main' : 'error.main',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+            minWidth: 300,
+            maxWidth: 360,
           }}
         >
-          {/* Colored top accent bar */}
+          {/* Icon */}
           <Box
             sx={{
-              height: 3,
-              bgcolor: isSuccess ? 'success.main' : 'error.main',
-              width: `${progress}%`,
-              transition: 'width 0.02s linear',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
             }}
-          />
+          >
+            {isSuccess ? (
+              <CheckCircleIcon sx={{ fontSize: 22, color: 'success.main' }} />
+            ) : (
+              <ErrorIcon sx={{ fontSize: 22, color: 'error.main' }} />
+            )}
+          </Box>
 
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.75, px: 2.5, py: 2 }}>
-            {/* Icon */}
-            <Box
+          {/* Text */}
+          <Box sx={{ flex: 1 }}>
+            <Typography
+              variant="body2"
               sx={{
-                width: 44,
-                height: 44,
-                borderRadius: '50%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0,
-                bgcolor: isSuccess ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)',
-                animation: isSuccess
-                  ? 'slideInIcon 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)'
-                  : 'shake-error 0.5s ease-out',
-                '@keyframes slideInIcon': {
-                  '0%': { transform: 'scale(0)', opacity: 0 },
-                  '70%': { transform: 'scale(1.15)' },
-                  '100%': { transform: 'scale(1)', opacity: 1 },
-                },
-                '@keyframes shake-error': {
-                  '0%, 100%': { transform: 'translateX(0)' },
-                  '15%': { transform: 'translateX(-5px)' },
-                  '30%': { transform: 'translateX(5px)' },
-                  '45%': { transform: 'translateX(-4px)' },
-                  '60%': { transform: 'translateX(4px)' },
-                  '75%': { transform: 'translateX(-2px)' },
-                },
+                fontWeight: 600,
+                color: 'text.primary',
+                lineHeight: 1.3,
               }}
             >
-              {isSuccess ? (
-                <CheckCircleIcon sx={{ fontSize: 24, color: 'success.main' }} />
-              ) : (
-                <ErrorIcon sx={{ fontSize: 24, color: 'error.main' }} />
-              )}
-            </Box>
-
-            {/* Content */}
-            <Box sx={{ flex: 1, minWidth: 0 }}>
-              <Typography
-                variant="subtitle2"
-                sx={{
-                  fontWeight: 800,
-                  color: isSuccess ? 'success.dark' : 'error.dark',
-                  lineHeight: 1.3,
-                  fontSize: '0.85rem',
-                  letterSpacing: '0.01em',
-                }}
-              >
-                {isSuccess ? 'Login Successful' : 'Login Failed'}
-              </Typography>
-              <Typography
-                variant="caption"
-                sx={{
-                  color: 'text.secondary',
-                  display: 'block',
-                  lineHeight: 1.4,
-                  mt: 0.2,
-                  fontSize: '0.75rem',
-                }}
-              >
-                {notificationMsg}
-              </Typography>
-            </Box>
-
-            {/* Right side: spinner or close button */}
-            <Box sx={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              {isSuccess ? (
-                <CircularProgress
-                  variant="determinate"
-                  value={progress}
-                  size={26}
-                  thickness={4}
-                  sx={{ color: 'success.main' }}
-                />
-              ) : (
-                <IconButton
-                  size="small"
-                  onClick={() => setNotification(null)}
-                  sx={{
-                    color: 'text.secondary',
-                    '&:hover': { color: 'error.main', bgcolor: 'rgba(239,68,68,0.08)' },
-                  }}
-                >
-                  <CloseIcon fontSize="small" />
-                </IconButton>
-              )}
-            </Box>
+              {isSuccess ? 'Login Successful' : 'Login Failed'}
+            </Typography>
+            <Typography
+              variant="caption"
+              sx={{
+                color: 'text.secondary',
+                lineHeight: 1.4,
+              }}
+            >
+              {notificationMsg}
+            </Typography>
           </Box>
-        </Card>
+
+          {/* Spinner / Close */}
+          <Box sx={{ flexShrink: 0, display: 'flex', alignItems: 'center' }}>
+            {isSuccess ? (
+              <CircularProgress
+                variant="determinate"
+                value={progress}
+                size={20}
+                thickness={4}
+                sx={{ color: 'success.main' }}
+              />
+            ) : (
+              <IconButton
+                size="small"
+                onClick={() => setNotification(null)}
+                sx={{ color: 'text.disabled', '&:hover': { color: 'text.secondary' } }}
+              >
+                <CloseIcon sx={{ fontSize: 18 }} />
+              </IconButton>
+            )}
+          </Box>
+        </Box>
       </Box>
 
       {/* ─── Login Card ─── */}
-      <Box sx={{ width: '100%', maxWidth: 420, position: 'relative', zIndex: 1 }}>
-        {/* Header */}
+      <Box sx={{ width: '100%', maxWidth: 400 }}>
+        {/* Logo + Title */}
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 4 }}>
           <Box
             component="img"
             src="/calf-logo.png"
             alt="Kopi Calf"
-            sx={{
-              height: 72,
-              width: 'auto',
-              mb: 2.5,
-              filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.08))',
-            }}
+            sx={{ height: 64, width: 'auto', mb: 2 }}
           />
-          <Typography
-            variant="h5"
-            sx={{
-              fontWeight: 700,
-              color: 'grey.800',
-              letterSpacing: '-0.02em',
-            }}
-          >
+          <Typography variant="h6" sx={{ fontWeight: 700, color: 'grey.800' }}>
             Internal System
-          </Typography>
-          <Typography
-            variant="body2"
-            color="text.secondary"
-            sx={{ mt: 0.5 }}
-          >
-            Sign in to your account to continue
           </Typography>
         </Box>
 
-        {/* Form Card */}
+        {/* Card */}
         <Card
-          elevation={2}
+          elevation={0}
           sx={{
-            borderRadius: 3,
+            borderRadius: 2.5,
             border: '1px solid',
             borderColor: 'divider',
-            bgcolor: 'rgba(255, 255, 255, 0.95)',
-            backdropFilter: 'blur(8px)',
-            transition: 'box-shadow 0.2s ease',
-            '&:hover': {
-              boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
-            },
+            bgcolor: 'background.paper',
           }}
         >
-          <CardContent sx={{ p: { xs: 3, sm: 4 } }}>
-            {/* Inline error */}
+          <CardContent sx={{ p: 3 }}>
             {error && (
               <Box
                 sx={{
                   display: 'flex',
                   alignItems: 'center',
                   gap: 1,
-                  px: 2,
-                  py: 1.25,
-                  mb: 2.5,
-                  borderRadius: 2,
-                  bgcolor: 'rgba(239, 68, 68, 0.06)',
+                  px: 1.5,
+                  py: 1,
+                  mb: 2,
+                  borderRadius: 1.5,
+                  bgcolor: 'error.50',
                   border: '1px solid',
-                  borderColor: 'rgba(239, 68, 68, 0.2)',
+                  borderColor: 'error.100',
                 }}
               >
-                <ErrorIcon sx={{ fontSize: 16, color: 'error.main', flexShrink: 0 }} />
+                <ErrorIcon sx={{ fontSize: 16, color: 'error.main' }} />
                 <Typography variant="body2" color="error.main" sx={{ fontWeight: 500 }}>
                   {error}
                 </Typography>
@@ -340,10 +243,7 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={loading}
-                sx={{ mb: 2.5 }}
-                slotProps={{
-                  htmlInput: { sx: { py: 1.25 } },
-                }}
+                sx={{ mb: 2 }}
               />
               <TextField
                 label="Password"
@@ -361,7 +261,6 @@ export default function LoginPage() {
                         <IconButton
                           size="small"
                           onClick={() => setShowPassword((s) => !s)}
-                          aria-label={showPassword ? 'Hide password' : 'Show password'}
                           edge="end"
                         >
                           {showPassword ? (
@@ -372,10 +271,9 @@ export default function LoginPage() {
                         </IconButton>
                       </InputAdornment>
                     ),
-                    sx: { py: 1.25 },
                   },
                 }}
-                sx={{ mb: 3 }}
+                sx={{ mb: 2.5 }}
               />
               <Button
                 type="submit"
@@ -383,25 +281,18 @@ export default function LoginPage() {
                 size="large"
                 variant="contained"
                 disabled={loading}
-                endIcon={loading ? null : <LoginIcon />}
+                endIcon={!loading && <LoginIcon />}
                 sx={{
                   py: 1.25,
-                  fontWeight: 700,
-                  fontSize: 15,
-                  borderRadius: 2,
+                  fontWeight: 600,
+                  fontSize: 14,
+                  borderRadius: 1.5,
                   textTransform: 'none',
-                  boxShadow: 'none',
-                  '&:hover': { boxShadow: '0 4px 12px rgba(79, 70, 229, 0.35)' },
+                  '&:active': { transform: 'scale(0.99)' },
+                  transition: 'all 0.15s ease',
                 }}
               >
-                {loading ? (
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                    <CircularProgress size={18} sx={{ color: 'white' }} thickness={5} />
-                    <span>Authenticating...</span>
-                  </Box>
-                ) : (
-                  'Sign In'
-                )}
+                {loading ? 'Authenticating...' : 'Sign In'}
               </Button>
             </Box>
           </CardContent>
@@ -409,12 +300,12 @@ export default function LoginPage() {
 
         <Typography
           variant="caption"
-          color="text.secondary"
+          color="text.disabled"
           align="center"
           component="p"
-          sx={{ mt: 3, letterSpacing: '0.01em' }}
+          sx={{ mt: 2.5 }}
         >
-          &copy; {new Date().getFullYear()} Kopi Calf Group — Version 1.0.0
+          &copy; {new Date().getFullYear()} Kopi Calf Group
         </Typography>
       </Box>
     </Box>
