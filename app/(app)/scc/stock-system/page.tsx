@@ -282,8 +282,8 @@ export default function StockSystemPage() {
                   }}
                 >
                   <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5 }}>
-                    <StoreIcon sx={{ fontSize: 13 }} />
-                    <Typography variant="caption" sx={{ lineHeight: 1, fontWeight: 700 }}>Outlet</Typography>
+                    <StoreIcon sx={{ fontSize: 13, color: 'rgba(255,255,255,0.85)' }} />
+                    <Typography variant="caption" sx={{ lineHeight: 1, fontWeight: 700, color: 'rgba(255,255,255,0.9)' }}>Outlet</Typography>
                     <FormControl size="small" sx={{ minWidth: 120 }}>
                       <Select
                         value={selectedOutletBranch}
@@ -322,8 +322,8 @@ export default function StockSystemPage() {
                   }}
                 >
                   <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5 }}>
-                    <WarehouseIcon sx={{ fontSize: 13 }} />
-                    <Typography variant="caption" sx={{ lineHeight: 1, fontWeight: 700 }}>Hub WH</Typography>
+                    <WarehouseIcon sx={{ fontSize: 13, color: 'rgba(255,255,255,0.85)' }} />
+                    <Typography variant="caption" sx={{ lineHeight: 1, fontWeight: 700, color: 'rgba(255,255,255,0.9)' }}>Hub WH</Typography>
                     <FormControl size="small" sx={{ minWidth: 120 }}>
                       <Select
                         value={selectedHubWhBranch}
@@ -363,8 +363,8 @@ export default function StockSystemPage() {
                   }}
                 >
                   <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5 }}>
-                    <KitchenIcon sx={{ fontSize: 13 }} />
-                    <Typography variant="caption" sx={{ lineHeight: 1, fontWeight: 700 }}>Central Kitchen</Typography>
+                    <KitchenIcon sx={{ fontSize: 13, color: 'rgba(255,255,255,0.85)' }} />
+                    <Typography variant="caption" sx={{ lineHeight: 1, fontWeight: 700, color: 'rgba(255,255,255,0.9)' }}>Central Kitchen</Typography>
                     <FormControl size="small" sx={{ minWidth: 130 }}>
                       <Select
                         value={selectedHubCkBranch}
@@ -408,55 +408,55 @@ export default function StockSystemPage() {
                 return (
                   <TableRow key={item.productId} hover sx={{ '&:last-child td': { border: 0 } }}>
                     <TableCell sx={{ position: 'sticky', left: 0, bgcolor: 'background.paper', borderRight: '1px solid', borderColor: 'divider', zIndex: 1 }}>
-                      <Typography variant="caption" sx={{ fontFamily: 'monospace', color: 'text.secondary', fontSize: 11 }}>
+                      <Typography variant="caption" sx={{ fontFamily: 'monospace', color: 'primary.main', fontSize: 11.5, fontWeight: 600 }}>
                         {item.productCode}
                       </Typography>
                     </TableCell>
-                    <TableCell>
-                      <Typography variant="body2" sx={{ fontWeight: 500, fontSize: 13 }}>
+                    <TableCell sx={{ bgcolor: 'background.paper' }}>
+                      <Typography variant="body2" sx={{ fontWeight: 600, fontSize: 13, color: 'text.primary', lineHeight: 1.4 }}>
                         {item.productName}
                       </Typography>
                     </TableCell>
-                    <TableCell align="center">
-                      <Chip size="small" label={item.categoryName} sx={{ fontSize: '0.7rem', height: 20 }} />
+                    <TableCell align="center" sx={{ bgcolor: 'background.paper' }}>
+                      <Chip size="small" label={item.categoryName} sx={{ fontSize: '0.7rem', height: 20, fontWeight: 600, bgcolor: 'primary.main', color: 'white' }} />
                     </TableCell>
-                    <TableCell align="center">
-                      <Typography variant="caption" color="text.secondary">{item.categoryTypeName}</Typography>
+                    <TableCell align="center" sx={{ bgcolor: 'background.paper' }}>
+                      <Typography variant="caption" sx={{ color: 'text.primary', fontWeight: 500, fontSize: 12 }}>{item.categoryTypeName}</Typography>
                     </TableCell>
-                    <TableCell align="center">
-                      <Typography variant="caption" color="text.secondary">{item.unit}</Typography>
+                    <TableCell align="center" sx={{ bgcolor: 'background.paper' }}>
+                      <Typography variant="caption" sx={{ color: 'text.primary', fontWeight: 500, fontSize: 12 }}>{item.unit}</Typography>
                     </TableCell>
-                    <TableCell align="center" sx={{ position: 'sticky', right: 274, zIndex: 1, bgcolor: 'background.paper' }}>
+                    <TableCell align="center" sx={{ position: 'sticky', right: 274, zIndex: 1, bgcolor: 'background.paper', borderLeft: '1px solid', borderColor: 'divider' }}>
                       <TextField
                         type="number"
                         size="small"
                         value={outletQty}
                         onChange={(e) => handleQtyChange(item.productId, 'outlet', selectedOutletBranch, e.target.value)}
-                        slotProps={{ htmlInput: { min: 0, style: { textAlign: 'center', fontWeight: 600 } } }}
+                        slotProps={{ htmlInput: { min: 0, style: { textAlign: 'center', fontWeight: 700, color: '#0D2B5E' } } }}
                         sx={{ width: 100, '& input': { py: 0.5, px: 1 } }}
                       />
                     </TableCell>
-                    <TableCell align="center" sx={{ position: 'sticky', right: 114, zIndex: 1, bgcolor: 'background.paper' }}>
+                    <TableCell align="center" sx={{ position: 'sticky', right: 114, zIndex: 1, bgcolor: 'background.paper', borderLeft: '1px solid', borderColor: 'divider' }}>
                       <TextField
                         type="number"
                         size="small"
                         value={hubWhQty}
                         onChange={(e) => handleQtyChange(item.productId, 'hubWh', selectedHubWhBranch, e.target.value)}
-                        slotProps={{ htmlInput: { min: 0, style: { textAlign: 'center', fontWeight: 600 } } }}
+                        slotProps={{ htmlInput: { min: 0, style: { textAlign: 'center', fontWeight: 700, color: '#1A4080' } } }}
                         sx={{ width: 100, '& input': { py: 0.5, px: 1 } }}
                       />
                     </TableCell>
-                    <TableCell align="center" sx={{ position: 'sticky', right: 0, zIndex: 1, bgcolor: 'background.paper', boxShadow: '-2px 0 4px rgba(0,0,0,0.06)' }}>
+                    <TableCell align="center" sx={{ position: 'sticky', right: 0, zIndex: 1, bgcolor: 'background.paper', borderLeft: '1px solid', borderColor: 'divider', boxShadow: '-2px 0 4px rgba(0,0,0,0.06)' }}>
                       <TextField
                         type="number"
                         size="small"
                         value={hubCkQty}
                         onChange={(e) => handleQtyChange(item.productId, 'hubCk', selectedHubCkBranch, e.target.value)}
-                        slotProps={{ htmlInput: { min: 0, style: { textAlign: 'center', fontWeight: 600 } } }}
+                        slotProps={{ htmlInput: { min: 0, style: { textAlign: 'center', fontWeight: 700, color: '#C62828' } } }}
                         sx={{ width: 110, '& input': { py: 0.5, px: 1 } }}
                       />
                     </TableCell>
-                    <TableCell align="center">
+                    <TableCell align="center" sx={{ bgcolor: 'background.paper' }}>
                       {allZero ? (
                         <Tooltip title="Zero across all locations">
                           <WarningIcon sx={{ fontSize: 16, color: 'warning.main' }} />

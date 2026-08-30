@@ -1,14 +1,35 @@
 'use client';
 
-import PagePlaceholder from '@/components/PagePlaceholder';
+import { Box, Typography } from '@mui/material';
+import PageHeader from '@/components/PageHeader';
 
 export default function AggregatorPage() {
   return (
-    <PagePlaceholder
-      title="Aggregator"
-      subtitle="Integration and review for aggregator channels (GoFood, GrabFood, ShopeeFood)"
-      breadcrumbs={['Aggregator']}
-      description="Review outlet menu, prices, and ratings across aggregator platforms, including Google Maps reviews."
-    />
+    <Box>
+      <PageHeader
+        title="Aggregator"
+        subtitle="Integration and review for aggregator channels"
+        breadcrumbs={['Aggregator']}
+      />
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: 'calc(100vh - 200px)',
+        }}
+      >
+        <Typography
+          sx={{
+            fontSize: 18,
+            fontWeight: 500,
+            color: 'text.secondary',
+            fontStyle: 'italic',
+          }}
+        >
+          Under Development
+        </Typography>
+      </Box>
+    </Box>
   );
 }

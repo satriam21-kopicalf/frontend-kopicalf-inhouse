@@ -1,14 +1,35 @@
 'use client';
 
-import PagePlaceholder from '@/components/PagePlaceholder';
+import { Box, Typography } from '@mui/material';
+import PageHeader from '@/components/PageHeader';
 
 export default function OperationalPage() {
   return (
-    <PagePlaceholder
-      title="Operational"
-      subtitle="Outlet operations, facilities, and PIC monitoring"
-      breadcrumbs={['Operational']}
-      description="Outlet monitoring, PIC check-in, project facilities (renovation, maintenance, building), and heavy tools."
-    />
+    <Box>
+      <PageHeader
+        title="Operational"
+        subtitle="Outlet operations, facilities, and PIC monitoring"
+        breadcrumbs={['Operational']}
+      />
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: 'calc(100vh - 200px)',
+        }}
+      >
+        <Typography
+          sx={{
+            fontSize: 18,
+            fontWeight: 500,
+            color: 'text.secondary',
+            fontStyle: 'italic',
+          }}
+        >
+          Under Development
+        </Typography>
+      </Box>
+    </Box>
   );
 }
