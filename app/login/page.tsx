@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Box, Card, CardContent, Typography, TextField, Button,
@@ -12,6 +12,7 @@ import {
   Login as LoginIcon,
   CheckCircle as CheckCircleIcon,
   Error as ErrorIcon,
+  Close as CloseIcon,
 } from '@mui/icons-material';
 import { login } from '@/lib/auth';
 
@@ -53,7 +54,6 @@ export default function LoginPage() {
       setError('Email and password are required.');
       setNotificationMsg('Email and password are required.');
       setNotification('error');
-      setTimeout(() => setNotification(null), 4000);
       return;
     }
     setError(null);
@@ -62,7 +62,7 @@ export default function LoginPage() {
     try {
       await new Promise((resolve) => setTimeout(resolve, 700));
       login(email.trim());
-      setNotificationMsg(`Welcome back! Login successful. Redirecting...`);
+      setNotificationMsg('Welcome back! Login successful. Redirecting...');
       setNotification('success');
 
       setTimeout(() => {
@@ -72,7 +72,6 @@ export default function LoginPage() {
       setLoading(false);
       setNotificationMsg('An unexpected error occurred. Please try again.');
       setNotification('error');
-      setTimeout(() => setNotification(null), 4000);
     }
   };
 
@@ -124,21 +123,18 @@ export default function LoginPage() {
         }}
       />
 
-      {/* ─── Notification Banner ─── */}
+      {/* ─── Notification Banner (Top Right) ─── */}
       <Box
         sx={{
           position: 'fixed',
           top: 24,
-          left: '50%',
+          right: 24,
           transform: notification
-            ? 'translateX(-50%) translateY(0)'
-            : 'translateX(-50%) translateY(-120px)',
+            ? 'translateX(0) translateY(0)'
+            : 'translateX(120%) translateY(0)',
           opacity: notification ? 1 : 0,
-          transition: 'transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease',
+          transition: 'transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease',
           zIndex: 9999,
-          width: '100%',
-          maxWidth: 480,
-          px: 2,
         }}
       >
         <Card
@@ -150,29 +146,25 @@ export default function LoginPage() {
             borderColor: isSuccess ? 'rgba(34, 197, 94, 0.3)' : 'rgba(239, 68, 68, 0.3)',
             backdropFilter: 'blur(16px)',
             WebkitBackdropFilter: 'blur(16px)',
-            bgcolor: isSuccess
-              ? 'rgba(255, 255, 255, 0.95)'
-              : 'rgba(255, 255, 255, 0.95)',
+            bgcolor: 'rgba(255, 255, 255, 0.97)',
             boxShadow: isSuccess
-              ? '0 8px 32px rgba(34, 197, 94, 0.2), 0 0 0 1px rgba(34, 197, 94, 0.1)'
-              : '0 8px 32px rgba(239, 68, 68, 0.2), 0 0 0 1px rgba(239, 68, 68, 0.1)',
+              ? '0 8px 40px rgba(34, 197, 94, 0.25), 0 0 0 1px rgba(34, 197, 94, 0.1)'
+              : '0 8px 40px rgba(239, 68, 68, 0.25), 0 0 0 1px rgba(239, 68, 68, 0.1)',
+            minWidth: 320,
+            maxWidth: 380,
           }}
         >
-          {/* Progress bar */}
+          {/* Colored top accent bar */}
           <Box
             sx={{
-              position: 'absolute',
-              bottom: 0,
-              left: 0,
               height: 3,
-              width: `${progress}%`,
               bgcolor: isSuccess ? 'success.main' : 'error.main',
+              width: `${progress}%`,
               transition: 'width 0.02s linear',
-              borderRadius: '0 2px 0 0',
             }}
           />
 
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, px: 2.5, py: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.75, px: 2.5, py: 2 }}>
             {/* Icon */}
             <Box
               sx={{
@@ -184,18 +176,21 @@ export default function LoginPage() {
                 justifyContent: 'center',
                 flexShrink: 0,
                 bgcolor: isSuccess ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)',
-                animation: isSuccess ? 'pulse-success 0.6s ease-out' : 'shake-error 0.5s ease-out',
-                '@keyframes pulse-success': {
-                  '0%': { transform: 'scale(0.6)', opacity: 0 },
-                  '60%': { transform: 'scale(1.1)' },
+                animation: isSuccess
+                  ? 'slideInIcon 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)'
+                  : 'shake-error 0.5s ease-out',
+                '@keyframes slideInIcon': {
+                  '0%': { transform: 'scale(0)', opacity: 0 },
+                  '70%': { transform: 'scale(1.15)' },
                   '100%': { transform: 'scale(1)', opacity: 1 },
                 },
                 '@keyframes shake-error': {
                   '0%, 100%': { transform: 'translateX(0)' },
-                  '20%': { transform: 'translateX(-4px)' },
-                  '40%': { transform: 'translateX(4px)' },
-                  '60%': { transform: 'translateX(-3px)' },
-                  '80%': { transform: 'translateX(3px)' },
+                  '15%': { transform: 'translateX(-5px)' },
+                  '30%': { transform: 'translateX(5px)' },
+                  '45%': { transform: 'translateX(-4px)' },
+                  '60%': { transform: 'translateX(4px)' },
+                  '75%': { transform: 'translateX(-2px)' },
                 },
               }}
             >
@@ -211,9 +206,11 @@ export default function LoginPage() {
               <Typography
                 variant="subtitle2"
                 sx={{
-                  fontWeight: 700,
+                  fontWeight: 800,
                   color: isSuccess ? 'success.dark' : 'error.dark',
                   lineHeight: 1.3,
+                  fontSize: '0.85rem',
+                  letterSpacing: '0.01em',
                 }}
               >
                 {isSuccess ? 'Login Successful' : 'Login Failed'}
@@ -224,25 +221,37 @@ export default function LoginPage() {
                   color: 'text.secondary',
                   display: 'block',
                   lineHeight: 1.4,
-                  mt: 0.25,
+                  mt: 0.2,
+                  fontSize: '0.75rem',
                 }}
               >
                 {notificationMsg}
               </Typography>
             </Box>
 
-            {/* Loading spinner on success */}
-            {isSuccess && (
-              <Box sx={{ flexShrink: 0 }}>
+            {/* Right side: spinner or close button */}
+            <Box sx={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              {isSuccess ? (
                 <CircularProgress
                   variant="determinate"
                   value={progress}
-                  size={28}
+                  size={26}
                   thickness={4}
                   sx={{ color: 'success.main' }}
                 />
-              </Box>
-            )}
+              ) : (
+                <IconButton
+                  size="small"
+                  onClick={() => setNotification(null)}
+                  sx={{
+                    color: 'text.secondary',
+                    '&:hover': { color: 'error.main', bgcolor: 'rgba(239,68,68,0.08)' },
+                  }}
+                >
+                  <CloseIcon fontSize="small" />
+                </IconButton>
+              )}
+            </Box>
           </Box>
         </Card>
       </Box>
@@ -374,9 +383,7 @@ export default function LoginPage() {
                 size="large"
                 variant="contained"
                 disabled={loading}
-                endIcon={
-                  loading ? null : <LoginIcon />
-                }
+                endIcon={loading ? null : <LoginIcon />}
                 sx={{
                   py: 1.25,
                   fontWeight: 700,
