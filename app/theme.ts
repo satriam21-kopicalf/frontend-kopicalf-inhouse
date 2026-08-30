@@ -55,7 +55,7 @@ const theme = createTheme({
       ...kopiNavy,
       main: kopiNavy[600],
       light: kopiNavy[400],
-      dark: kopiNavy[800],
+      dark: kopiNavy[700],
       contrastText: '#ffffff',
     },
     secondary: {
