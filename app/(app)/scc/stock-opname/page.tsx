@@ -5,7 +5,8 @@ import {
   Box, Typography, Tabs, Tab, Table, TableBody, TableCell,
   TableContainer, TableHead, TableRow, IconButton, Tooltip, Drawer,
   TextField, MenuItem, Snackbar, Alert, Select, FormControl,
-  InputLabel, InputAdornment, Button, Chip,
+  InputLabel, InputAdornment, Button, Chip, Dialog, DialogTitle,
+  DialogContent, DialogActions, Stack,
 } from '@mui/material';
 import {
   Visibility as VisibilityIcon,
@@ -16,6 +17,7 @@ import {
   InfoOutlined as InfoIcon,
   CheckCircle as CheckCircleIcon,
   Warning as WarningIcon,
+  Tune as TuneIcon,
 } from '@mui/icons-material';
 import PageHeader from '@/components/PageHeader';
 import DataDrawer from '@/components/DataDrawer';
@@ -31,10 +33,10 @@ const PERIOD_LABELS: Record<SoPeriodType, string> = {
 };
 
 const STATUS_COLORS: Record<SoStatus, { bg: string; color: string; label: string }> = {
-  draft: { bg: '#e0e0e0', color: '#616161', label: 'Draft' },
-  submitted: { bg: '#e3f2fd', color: '#0d47a1', label: 'Submitted' },
-  approved: { bg: '#e8f5e9', color: '#1b5e20', label: 'Approved' },
-  rejected: { bg: '#ffebee', color: '#b71c1c', label: 'Rejected' },
+  draft: { bg: '#f1f5f9', color: '#475569', label: 'Draft' },
+  submitted: { bg: '#dbeafe', color: '#1e40af', label: 'Submitted' },
+  approved: { bg: '#dcfce7', color: '#166534', label: 'Approved' },
+  rejected: { bg: '#fee2e2', color: '#991b1b', label: 'Rejected' },
 };
 
 export default function StockOpnamePage() {
@@ -45,6 +47,7 @@ export default function StockOpnamePage() {
   const [tab, setTab] = useState<SoPeriodType>('daily_packaging');
   const [filterBranch, setFilterBranch] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
+  const [filterPic, setFilterPic] = useState('');
   const [search, setSearch] = useState('');
   const [dateStart, setDateStart] = useState('');
   const [dateEnd, setDateEnd] = useState('');
@@ -55,14 +58,27 @@ export default function StockOpnamePage() {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteDrawerOpen, setDeleteDrawerOpen] = useState(false);
   const [toast, setToast] = useState({ open: false, msg: '', sev: 'success' as 'success' | 'error' });
+
+  // Filter modal state
+  const [filterModalOpen, setFilterModalOpen] = useState(false);
+  const [filterModalBranch, setFilterModalBranch] = useState('');
+  const [filterModalStatus, setFilterModalStatus] = useState('');
+  const [filterModalPic, setFilterModalPic] = useState('');
+  const [filterModalDateStart, setFilterModalDateStart] = useState('');
+  const [filterModalDateEnd, setFilterModalDateEnd] = useState('');
+  const [filterModalHasVariance, setFilterModalHasVariance] = useState('');
+
   const ROWS_PER_PAGE = 20;
 
   const filtered = useMemo(() => {
     let list = records.filter((r) => r.periodType === tab);
     if (filterBranch) list = list.filter((r) => r.branchId === Number(filterBranch));
     if (filterStatus) list = list.filter((r) => r.status === filterStatus);
+    if (filterPic) list = list.filter((r) => r.submittedBy.toLowerCase().includes(filterPic.toLowerCase()));
     if (dateStart) list = list.filter((r) => r.soDate >= dateStart);
     if (dateEnd) list = list.filter((r) => r.soDate <= dateEnd);
+    if (filterModalHasVariance === 'yes') list = list.filter((r) => r.varianceValue !== 0);
+    if (filterModalHasVariance === 'no') list = list.filter((r) => r.varianceValue === 0);
     if (search.trim()) {
       const q = search.toLowerCase();
       list = list.filter(
@@ -74,7 +90,7 @@ export default function StockOpnamePage() {
       );
     }
     return list;
-  }, [records, tab, filterBranch, filterStatus, dateStart, dateEnd, search]);
+  }, [records, tab, filterBranch, filterStatus, filterPic, dateStart, dateEnd, search, filterModalHasVariance]);
 
   const detailCount = useMemo(() => {
     const map = new Map<number, number>();
@@ -91,6 +107,9 @@ export default function StockOpnamePage() {
     const variance = filtered.reduce((s, r) => s + r.varianceValue, 0);
     return { total, approved, pending, variance };
   }, [filtered]);
+
+  // All unique PICs for filter
+  const allPic = useMemo(() => [...new Set(records.map((r) => r.submittedBy))].sort(), [records]);
 
   const openView = (row: StockOpname) => {
     setViewing({ ...row });
@@ -125,6 +144,45 @@ export default function StockOpnamePage() {
       ]
     : [];
 
+  // Apply filters from modal
+  const applyFilterModal = () => {
+    setFilterBranch(filterModalBranch);
+    setFilterStatus(filterModalStatus);
+    setFilterPic(filterModalPic);
+    setDateStart(filterModalDateStart);
+    setDateEnd(filterModalDateEnd);
+    setFilterModalHasVariance(filterModalHasVariance);
+    setPage(0);
+    setFilterModalOpen(false);
+  };
+
+  // Clear all filters
+  const clearAllFilters = () => {
+    setFilterBranch('');
+    setFilterStatus('');
+    setFilterPic('');
+    setDateStart('');
+    setDateEnd('');
+    setFilterModalBranch('');
+    setFilterModalStatus('');
+    setFilterModalPic('');
+    setFilterModalDateStart('');
+    setFilterModalDateEnd('');
+    setFilterModalHasVariance('');
+    setPage(0);
+  };
+
+  const hasActiveFilters = !!(filterBranch || filterStatus || filterPic || dateStart || dateEnd || filterModalHasVariance);
+
+  const deleteFields2 = deleteTarget
+    ? [
+        { name: 'branchName', label: 'Branch', type: 'readonly' as const },
+        { name: 'periodLabel', label: 'Period', type: 'readonly' as const },
+        { name: 'soDate', label: 'Date', type: 'readonly' as const },
+        { name: 'status', label: 'Status', type: 'readonly' as const },
+      ]
+    : [];
+
   return (
     <Box>
       <PageHeader
@@ -144,12 +202,12 @@ export default function StockOpnamePage() {
       >
         {[
           { label: 'Total Records', value: kpis.total },
-          { label: 'Approved', value: kpis.approved, color: '#2e7d32' },
-          { label: 'Pending', value: kpis.pending, color: '#1565c0' },
+          { label: 'Approved', value: kpis.approved, color: '#166534' },
+          { label: 'Pending', value: kpis.pending, color: '#1e40af' },
           {
             label: 'Variance',
             value: kpis.variance !== 0 ? fmtCurr(Math.abs(kpis.variance)) : 'Balanced',
-            color: kpis.variance !== 0 ? '#c62828' : '#2e7d32',
+            color: kpis.variance !== 0 ? '#991b1b' : '#166534',
           },
         ].map((s) => (
           <Box key={s.label} sx={{ minWidth: 90 }}>
@@ -169,6 +227,15 @@ export default function StockOpnamePage() {
             variant="outlined"
             sx={{ fontSize: 11.5 }}
           />
+          <Button
+            variant={hasActiveFilters ? 'contained' : 'outlined'}
+            size="small"
+            startIcon={<TuneIcon sx={{ fontSize: 14 }} />}
+            onClick={() => setFilterModalOpen(true)}
+            sx={{ fontSize: 12, py: 0.5, px: 1.5 }}
+          >
+            Filter
+          </Button>
         </Box>
       </Box>
 
@@ -180,7 +247,7 @@ export default function StockOpnamePage() {
           bgcolor: 'background.paper', mt: 0,
         }}
       >
-        {/* Filter bar */}
+        {/* Compact filter bar (always visible — minimal) */}
         <Box
           sx={{
             display: 'flex', gap: 1.5, px: 2.5, py: 1.25,
@@ -200,10 +267,10 @@ export default function StockOpnamePage() {
 
           <TextField
             size="small"
-            placeholder="Search branch, date, PIC..."
+            placeholder="Quick search..."
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(0); }}
-            sx={{ minWidth: 200 }}
+            sx={{ minWidth: 180 }}
             slotProps={{
               input: {
                 startAdornment: (
@@ -214,62 +281,65 @@ export default function StockOpnamePage() {
               },
             }}
           />
-          <FormControl size="small" sx={{ minWidth: 150 }}>
-            <InputLabel>Branch</InputLabel>
-            <Select
-              value={filterBranch}
-              label="Branch"
-              onChange={(e) => { setFilterBranch(e.target.value); setPage(0); }}
-            >
-              <MenuItem value="">All Branches</MenuItem>
-              {[...new Map(records.filter((r) => r.periodType === tab).map((r) => [r.branchId, r])).values()].map((r) => (
-                <MenuItem key={r.branchId} value={r.branchId}>{r.branchName}</MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-          <FormControl size="small" sx={{ minWidth: 130 }}>
-            <InputLabel>Status</InputLabel>
-            <Select
-              value={filterStatus}
-              label="Status"
-              onChange={(e) => { setFilterStatus(e.target.value); setPage(0); }}
-            >
-              <MenuItem value="">All Status</MenuItem>
-              <MenuItem value="draft">Draft</MenuItem>
-              <MenuItem value="submitted">Submitted</MenuItem>
-              <MenuItem value="approved">Approved</MenuItem>
-              <MenuItem value="rejected">Rejected</MenuItem>
-            </Select>
-          </FormControl>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, ml: 'auto' }}>
-            <DateRangeIcon sx={{ fontSize: 15, color: 'text.secondary' }} />
-            <TextField
-              size="small"
-              type="date"
-              label="Start Date"
-              value={dateStart}
-              onChange={(e) => { setDateStart(e.target.value); setPage(0); }}
-              slotProps={{ inputLabel: { shrink: true } }}
-              sx={{ width: 160, fontSize: 12.5 }}
-            />
-            <Typography variant="caption" color="text.secondary">to</Typography>
-            <TextField
-              size="small"
-              type="date"
-              label="End Date"
-              value={dateEnd}
-              onChange={(e) => { setDateEnd(e.target.value); setPage(0); }}
-              slotProps={{ inputLabel: { shrink: true } }}
-              sx={{ width: 160, fontSize: 12.5 }}
-            />
-            {(dateStart || dateEnd) && (
-              <Tooltip title="Clear date filter">
-                <IconButton size="small" onClick={clearDateFilter}>
-                  <FilterListIcon sx={{ fontSize: 14 }} />
-                </IconButton>
-              </Tooltip>
-            )}
+
+          {/* Quick filter chips */}
+          <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+            {[
+              { label: 'Has Variance', val: 'yes', color: 'error' },
+              { label: 'Balanced', val: 'no', color: 'success' },
+            ].map((chip) => (
+              <Chip
+                key={chip.val}
+                label={chip.label}
+                size="small"
+                variant={filterModalHasVariance === chip.val ? 'filled' : 'outlined'}
+                color={filterModalHasVariance === chip.val ? chip.color as 'error' | 'success' : 'default'}
+                onClick={() => {
+                  setFilterModalHasVariance(filterModalHasVariance === chip.val ? '' : chip.val);
+                  setPage(0);
+                }}
+                sx={{ fontSize: 11, height: 24 }}
+              />
+            ))}
           </Box>
+
+          {/* Active filter tags */}
+          {hasActiveFilters && (
+            <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', ml: 0.5 }}>
+              {filterBranch && (
+                <Chip
+                  label={`Branch: ${records.find((r) => r.branchId === Number(filterBranch))?.branchName ?? filterBranch}`}
+                  size="small"
+                  onDelete={() => { setFilterBranch(''); }}
+                  sx={{ fontSize: 11, height: 22 }}
+                />
+              )}
+              {filterStatus && (
+                <Chip
+                  label={`Status: ${STATUS_COLORS[filterStatus as SoStatus].label}`}
+                  size="small"
+                  onDelete={() => { setFilterStatus(''); }}
+                  sx={{ fontSize: 11, height: 22 }}
+                />
+              )}
+              {(dateStart || dateEnd) && (
+                <Chip
+                  label={`${dateStart || '...' } – ${dateEnd || '...'}`}
+                  size="small"
+                  onDelete={clearDateFilter}
+                  sx={{ fontSize: 11, height: 22 }}
+                />
+              )}
+              <Chip
+                label="Clear all"
+                size="small"
+                color="default"
+                variant="outlined"
+                onClick={clearAllFilters}
+                sx={{ fontSize: 11, height: 22 }}
+              />
+            </Box>
+          )}
         </Box>
 
         {/* Table */}
@@ -306,8 +376,8 @@ export default function StockOpnamePage() {
                         variant="caption"
                         sx={{
                           px: 0.75, py: 0.25, borderRadius: 0.5, fontSize: 10, fontWeight: 700,
-                          bgcolor: r.branchType === 'OUTLET' ? '#e3f2fd' : r.branchType === 'HUB WH' ? '#fff8e1' : '#f3e5f5',
-                          color: r.branchType === 'OUTLET' ? '#0d47a1' : r.branchType === 'HUB WH' ? '#e65100' : '#4a148c',
+                          bgcolor: r.branchType === 'OUTLET' ? '#dbeafe' : r.branchType === 'HUB WH' ? '#fef9c3' : '#f3e5f5',
+                          color: r.branchType === 'OUTLET' ? '#1e40af' : r.branchType === 'HUB WH' ? '#92400e' : '#4a148c',
                         }}
                       >
                         {r.branchType}
@@ -399,6 +469,130 @@ export default function StockOpnamePage() {
           </Box>
         </Box>
       </Box>
+
+      {/* ─── Filter Modal ─── */}
+      <Dialog
+        open={filterModalOpen}
+        onClose={() => setFilterModalOpen(false)}
+        maxWidth="sm"
+        fullWidth
+        slotProps={{
+          paper: { sx: { borderRadius: 2 } },
+        }}
+      >
+        <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pb: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <TuneIcon sx={{ fontSize: 18, color: 'primary.main' }} />
+            <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>Filter Options</Typography>
+          </Box>
+          <IconButton size="small" onClick={() => setFilterModalOpen(false)}>
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent dividers>
+          <Stack spacing={2.5} sx={{ pt: 0.5 }}>
+            {/* Branch */}
+            <FormControl size="small" fullWidth>
+              <InputLabel>Branch</InputLabel>
+              <Select
+                value={filterModalBranch}
+                label="Branch"
+                onChange={(e) => setFilterModalBranch(e.target.value)}
+              >
+                <MenuItem value="">All Branches</MenuItem>
+                {[...new Map(records.filter((r) => r.periodType === tab).map((r) => [r.branchId, r])).values()].map((r) => (
+                  <MenuItem key={r.branchId} value={r.branchId}>{r.branchName}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            {/* Status */}
+            <FormControl size="small" fullWidth>
+              <InputLabel>Status</InputLabel>
+              <Select
+                value={filterModalStatus}
+                label="Status"
+                onChange={(e) => setFilterModalStatus(e.target.value)}
+              >
+                <MenuItem value="">All Status</MenuItem>
+                <MenuItem value="draft">Draft</MenuItem>
+                <MenuItem value="submitted">Submitted</MenuItem>
+                <MenuItem value="approved">Approved</MenuItem>
+                <MenuItem value="rejected">Rejected</MenuItem>
+              </Select>
+            </FormControl>
+
+            {/* PIC */}
+            <FormControl size="small" fullWidth>
+              <InputLabel>PIC / Submitted By</InputLabel>
+              <Select
+                value={filterModalPic}
+                label="PIC / Submitted By"
+                onChange={(e) => setFilterModalPic(e.target.value)}
+              >
+                <MenuItem value="">All PIC</MenuItem>
+                {allPic.map((pic) => (
+                  <MenuItem key={pic} value={pic}>{pic}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            {/* Variance */}
+            <FormControl size="small" fullWidth>
+              <InputLabel>Variance</InputLabel>
+              <Select
+                value={filterModalHasVariance}
+                label="Variance"
+                onChange={(e) => setFilterModalHasVariance(e.target.value)}
+              >
+                <MenuItem value="">All</MenuItem>
+                <MenuItem value="yes">Has Variance</MenuItem>
+                <MenuItem value="no">Balanced (No Variance)</MenuItem>
+              </Select>
+            </FormControl>
+
+            {/* Date Range */}
+            <Box>
+              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1, fontWeight: 600, letterSpacing: '0.3px', textTransform: 'uppercase', fontSize: 11 }}>
+                Date Range
+              </Typography>
+              <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
+                <TextField
+                  size="small"
+                  type="date"
+                  label="Start Date"
+                  value={filterModalDateStart}
+                  onChange={(e) => setFilterModalDateStart(e.target.value)}
+                  slotProps={{ inputLabel: { shrink: true } }}
+                  sx={{ flex: 1 }}
+                />
+                <Typography variant="caption" color="text.secondary">–</Typography>
+                <TextField
+                  size="small"
+                  type="date"
+                  label="End Date"
+                  value={filterModalDateEnd}
+                  onChange={(e) => setFilterModalDateEnd(e.target.value)}
+                  slotProps={{ inputLabel: { shrink: true } }}
+                  sx={{ flex: 1 }}
+                />
+              </Box>
+            </Box>
+          </Stack>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, py: 2, gap: 1 }}>
+          <Button variant="outlined" color="inherit" size="small" onClick={clearAllFilters}>
+            Clear All
+          </Button>
+          <Box sx={{ flex: 1 }} />
+          <Button variant="outlined" size="small" onClick={() => setFilterModalOpen(false)}>
+            Cancel
+          </Button>
+          <Button variant="contained" size="small" onClick={applyFilterModal}>
+            Apply Filters
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {/* View Drawer */}
       <Drawer
@@ -538,7 +732,7 @@ export default function StockOpnamePage() {
         mode="delete"
         title="Stock Opname"
         subtitle={`Confirm deletion of Stock Opname record — ${deleteTarget?.periodLabel}`}
-        fields={deleteFields}
+        fields={deleteFields2}
         values={deleteTarget ? {
           branchName: deleteTarget.branchName,
           periodLabel: deleteTarget.periodLabel,

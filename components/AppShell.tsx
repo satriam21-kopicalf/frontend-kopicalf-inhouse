@@ -18,28 +18,33 @@ import {
   Assessment as AssessmentIcon,
   MoreHoriz as MoreIcon,
   MenuOpen as ToggleSidebarIcon,
-  Inventory2 as InventoryIcon,
-  Category as CategoryIcon,
+  Settings as SettingsIcon,
+  GroupWork as MasterIcon,
+  ListAlt as DataIcon,
   PointOfSale as POSIcon,
+  Storefront as StorefrontIcon,
+  Inventory as InventoryIcon,
   LocalOffer as OfferIcon,
+  Layers as LayersIcon,
   AccountTree as AccountTreeIcon,
   Calculate as CalculateIcon,
-  People as PeopleIcon,
-  BarChart as BarChartIcon,
+  Badge as BadgeIcon,
+  Scale as ScaleIcon,
+  Receipt as ReceiptIcon,
+  ShoppingCart as ShoppingCartIcon,
+  Inventory2 as Inventory2Icon,
+  Delete as WasteIcon,
+  Checklist as ChecklistIcon,
+  Description as DescriptionIcon,
   ShowChart as ShowChartIcon,
   TrendingUp as TrendingUpIcon,
-  Inventory as Inventory2Icon,
-  DeleteOutlined as WasteIcon,
-  Checklist as ChecklistIcon,
-  Settings as SettingsIcon,
-  Storefront as StorefrontIcon,
 } from '@mui/icons-material';
 import { NAV_ITEMS } from '@/components/navConfig';
 import { isLoggedIn, logout, getUserEmail } from '@/lib/auth';
 
 const DRAWER_WIDTH = 256;
 const COLLAPSED_WIDTH = 56;
-const HEADER_HEIGHT = 52;
+const HEADER_HEIGHT = 56;
 const BOTTOM_NAV_HEIGHT = 56;
 const BOTTOM_NAV_MORE = '__more__';
 
@@ -48,7 +53,7 @@ const LABEL_MAP: Record<string, string> = {
 };
 
 // ============================================================================
-// NAV ITEM (3-level hierarchy — glassmorphism modern style)
+// NAV ITEM (3-level hierarchy — Enterprise Professional Style)
 // ============================================================================
 interface NavItemProps {
   item: typeof NAV_ITEMS[0];
@@ -84,11 +89,11 @@ function NavItem({ item, openGroups, toggleGroup, pathname, collapsed = false, o
             sx={{
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               width: 40, height: 40, mx: 'auto', mb: 0.5,
-              borderRadius: 2, cursor: 'pointer', textDecoration: 'none', border: 'none',
-              bgcolor: isActive ? 'rgba(79, 70, 229, 0.12)' : 'transparent',
-              color: isActive ? '#4f46e5' : '#94a3b8',
+              borderRadius: 1.5, cursor: 'pointer', textDecoration: 'none', border: 'none',
+              bgcolor: isActive ? 'rgba(30, 41, 59, 0.08)' : 'transparent',
+              color: isActive ? '#1e3a5f' : '#94a3b8',
               transition: 'all 0.15s ease',
-              '&:hover': { bgcolor: 'rgba(79, 70, 229, 0.08)', color: '#4f46e5' },
+              '&:hover': { bgcolor: 'rgba(30, 41, 59, 0.05)', color: '#1e3a5f' },
             }}
           >
             {Icon && <Icon sx={{ fontSize: 18 }} />}
@@ -98,7 +103,7 @@ function NavItem({ item, openGroups, toggleGroup, pathname, collapsed = false, o
     }
 
     return (
-      <Box sx={{ mb: 0.25, px: 1 }}>
+      <Box sx={{ mb: 0.25, px: 1.5 }}>
         <Box
           component={hasChildren ? 'button' : Link}
           href={hasChildren ? '#' : (item.href || '/dashboard')}
@@ -107,21 +112,17 @@ function NavItem({ item, openGroups, toggleGroup, pathname, collapsed = false, o
             display: 'flex', alignItems: 'center',
             width: '100%', minHeight: 38, px: 1.5, py: 0.5,
             cursor: 'pointer', textDecoration: 'none', border: 'none',
-            bgcolor: isActive ? 'rgba(79, 70, 229, 0.10)' : 'transparent',
-            color: isActive ? '#1e1b4b' : '#64748b',
+            bgcolor: isActive ? '#1e3a5f' : 'transparent',
+            color: isActive ? '#ffffff' : '#64748b',
             transition: 'all 0.15s ease',
-            gap: 1, borderRadius: 2,
+            gap: 1, borderRadius: 1.5,
             position: 'relative', overflow: 'hidden',
-            '&::before': isActive ? {
-              content: '""', position: 'absolute', left: 0, top: '20%', bottom: '20%',
-              width: 3, borderRadius: '0 2px 2px 0',
-              bgcolor: '#4f46e5',
-            } : {},
-            '&:hover': { bgcolor: isActive ? 'rgba(79, 70, 229, 0.10)' : 'rgba(0,0,0,0.03)' },
+            boxShadow: isActive ? '0 2px 8px rgba(30, 58, 95, 0.25)' : 'none',
+            '&:hover': { bgcolor: isActive ? '#1e3a5f' : 'rgba(30, 41, 59, 0.04)', color: isActive ? '#ffffff' : '#1e293b' },
           }}
         >
           {Icon && (
-            <Box sx={{ display: 'flex', flexShrink: 0, color: 'inherit', opacity: isActive ? 1 : 0.55 }}>
+            <Box sx={{ display: 'flex', flexShrink: 0, color: 'inherit' }}>
               <Icon sx={{ fontSize: 16 }} />
             </Box>
           )}
@@ -133,7 +134,7 @@ function NavItem({ item, openGroups, toggleGroup, pathname, collapsed = false, o
             {displayLabel}
           </Typography>
           {hasChildren && (
-            <Box sx={{ display: 'flex', flexShrink: 0, color: '#94a3b8', transition: 'transform 0.2s ease', transform: isGroupOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}>
+            <Box sx={{ display: 'flex', flexShrink: 0, color: 'inherit', opacity: 0.5, transition: 'transform 0.2s ease', transform: isGroupOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}>
               <ExpandMore sx={{ fontSize: 14 }} />
             </Box>
           )}
@@ -177,9 +178,9 @@ function NavItem({ item, openGroups, toggleGroup, pathname, collapsed = false, o
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               width: 36, height: 34, mx: 'auto', mb: 0.1,
               borderRadius: 1.5, cursor: 'pointer', textDecoration: 'none', border: 'none',
-              bgcolor: isActive ? 'rgba(79, 70, 229, 0.10)' : 'transparent',
-              color: isActive ? '#4f46e5' : '#94a3b8',
-              '&:hover': { bgcolor: 'rgba(79, 70, 229, 0.06)', color: '#4f46e5' },
+              bgcolor: isActive ? 'rgba(30, 41, 59, 0.08)' : 'transparent',
+              color: isActive ? '#1e3a5f' : '#94a3b8',
+              '&:hover': { bgcolor: 'rgba(30, 41, 59, 0.05)', color: '#1e3a5f' },
             }}
           >
             {Icon && <Icon sx={{ fontSize: 15 }} />}
@@ -199,16 +200,16 @@ function NavItem({ item, openGroups, toggleGroup, pathname, collapsed = false, o
             display: 'flex', alignItems: 'center',
             width: '100%', minHeight: 30, px: 1.5, py: 0.35, mb: 0.05,
             borderRadius: 1.5, textDecoration: 'none',
-            bgcolor: isActive ? 'rgba(79, 70, 229, 0.10)' : 'transparent',
-            color: isActive ? '#1e1b4b' : '#64748b',
+            bgcolor: isActive ? 'rgba(30, 58, 95, 0.08)' : 'transparent',
+            color: isActive ? '#1e3a5f' : '#64748b',
             gap: 0.75, transition: 'all 0.15s ease',
             pl: 3.5,
-            '&:hover': { bgcolor: isActive ? 'rgba(79, 70, 229, 0.10)' : 'rgba(0,0,0,0.03)', color: '#1e1b4b' },
+            '&:hover': { bgcolor: isActive ? 'rgba(30, 58, 95, 0.08)' : 'rgba(30, 41, 59, 0.04)', color: '#1e3a5f' },
           }}
         >
-          <Box sx={{ width: 5, height: 5, borderRadius: '50%', bgcolor: isActive ? '#4f46e5' : '#cbd5e1', flexShrink: 0 }} />
+          <Box sx={{ width: 5, height: 5, borderRadius: '50%', bgcolor: isActive ? '#1e3a5f' : '#d1d5db', flexShrink: 0 }} />
           {Icon && (
-            <Box sx={{ display: 'flex', flexShrink: 0, opacity: isActive ? 0.9 : 0.45 }}>
+            <Box sx={{ display: 'flex', flexShrink: 0, opacity: isActive ? 1 : 0.5 }}>
               <Icon sx={{ fontSize: 13, color: 'inherit' }} />
             </Box>
           )}
@@ -221,7 +222,7 @@ function NavItem({ item, openGroups, toggleGroup, pathname, collapsed = false, o
 
     // Level 1 with sub-children (Master → children)
     return (
-      <Box sx={{ mb: 0.25, px: 1 }}>
+      <Box sx={{ mb: 0.25, px: 1.5 }}>
         <Box
           component="button"
           onClick={(e: React.MouseEvent) => { e.preventDefault(); toggleGroup(item.label); }}
@@ -229,22 +230,22 @@ function NavItem({ item, openGroups, toggleGroup, pathname, collapsed = false, o
             display: 'flex', alignItems: 'center',
             width: '100%', minHeight: 30, px: 1.5, py: 0.35, mb: 0.05,
             borderRadius: 1.5, cursor: 'pointer', textDecoration: 'none', border: 'none',
-            bgcolor: isActive ? 'rgba(79, 70, 229, 0.10)' : 'transparent',
-            color: isActive ? '#1e1b4b' : '#64748b',
+            bgcolor: isActive ? 'rgba(30, 58, 95, 0.08)' : 'transparent',
+            color: isActive ? '#1e3a5f' : '#64748b',
             gap: 0.75, transition: 'all 0.15s ease',
-            '&:hover': { bgcolor: isActive ? 'rgba(79, 70, 229, 0.10)' : 'rgba(0,0,0,0.03)' },
+            '&:hover': { bgcolor: isActive ? 'rgba(30, 58, 95, 0.08)' : 'rgba(30, 41, 59, 0.04)', color: '#1e3a5f' },
           }}
         >
-          <Box sx={{ width: 5, height: 5, borderRadius: '50%', bgcolor: isActive ? '#4f46e5' : '#cbd5e1', flexShrink: 0 }} />
+          <Box sx={{ width: 5, height: 5, borderRadius: '50%', bgcolor: isActive ? '#1e3a5f' : '#d1d5db', flexShrink: 0 }} />
           {Icon && (
-            <Box sx={{ display: 'flex', flexShrink: 0, opacity: isActive ? 0.9 : 0.45 }}>
+            <Box sx={{ display: 'flex', flexShrink: 0, opacity: isActive ? 1 : 0.5 }}>
               <Icon sx={{ fontSize: 13, color: 'inherit' }} />
             </Box>
           )}
           <Typography sx={{ fontSize: 12.5, fontWeight: isActive ? 600 : 500, color: 'inherit', flex: 1, textAlign: 'left', fontFamily: 'inherit' }}>
             {displayLabel}
           </Typography>
-          <Box sx={{ display: 'flex', flexShrink: 0, color: '#94a3b8', transition: 'transform 0.2s ease', transform: isGroupOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}>
+          <Box sx={{ display: 'flex', flexShrink: 0, color: 'inherit', opacity: 0.5, transition: 'transform 0.2s ease', transform: isGroupOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}>
             <ExpandMore sx={{ fontSize: 13 }} />
           </Box>
         </Box>
@@ -267,14 +268,15 @@ function NavItem({ item, openGroups, toggleGroup, pathname, collapsed = false, o
                       display: 'flex', alignItems: 'center',
                       width: '100%', minHeight: 28, px: 1.5, py: 0.3, mb: 0.05,
                       borderRadius: 1.5, textDecoration: 'none',
-                      bgcolor: gcActive ? '#4f46e5' : 'transparent',
+                      bgcolor: gcActive ? '#1e3a5f' : 'transparent',
                       color: gcActive ? '#ffffff' : '#64748b',
                       gap: 0.75, transition: 'all 0.15s ease',
                       pl: 5,
-                      '&:hover': { bgcolor: gcActive ? '#4338ca' : 'rgba(79, 70, 229, 0.05)', color: gcActive ? '#ffffff' : '#1e1b4b' },
+                      boxShadow: gcActive ? '0 1px 4px rgba(30, 58, 95, 0.2)' : 'none',
+                      '&:hover': { bgcolor: gcActive ? '#1e3a5f' : 'rgba(30, 41, 59, 0.05)', color: gcActive ? '#ffffff' : '#1e3a5f' },
                     }}
                   >
-                    <Box sx={{ width: 5, height: 5, borderRadius: '50%', bgcolor: gcActive ? '#a5b4fc' : '#d1d5db', flexShrink: 0 }} />
+                    <Box sx={{ width: 5, height: 5, borderRadius: '50%', bgcolor: gcActive ? '#ffffff' : '#d1d5db', flexShrink: 0 }} />
                     {GCIcon && (
                       <Box sx={{ display: 'flex', flexShrink: 0 }}>
                         <GCIcon sx={{ fontSize: 12, color: 'inherit' }} />
@@ -297,7 +299,7 @@ function NavItem({ item, openGroups, toggleGroup, pathname, collapsed = false, o
 }
 
 // ============================================================================
-// SIDEBAR (Desktop) — glassmorphism floating design
+// SIDEBAR (Desktop) — Enterprise Professional Dark Header
 // ============================================================================
 function DesktopSidebar({
   onNavigate,
@@ -338,32 +340,68 @@ function DesktopSidebar({
       height: '100vh', display: 'flex', flexDirection: 'column',
       transition: 'width 0.25s cubic-bezier(0.4, 0, 0.2, 1), min-width 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
       overflow: 'hidden',
-      bgcolor: 'rgba(255, 255, 255, 0.85)',
-      backdropFilter: 'blur(20px)',
-      WebkitBackdropFilter: 'blur(20px)',
-      borderRight: '1px solid rgba(0, 0, 0, 0.06)',
-      boxShadow: '4px 0 24px rgba(0, 0, 0, 0.04)',
+      bgcolor: '#ffffff',
+      borderRight: '1px solid #e2e8f0',
     }}>
-      {/* ── Header ── */}
+      {/* ── Header (dark navy brand bar) ── */}
       <Box sx={{
-        height: HEADER_HEIGHT, display: 'flex', alignItems: 'center', justifyContent: 'center',
+        height: HEADER_HEIGHT, display: 'flex', alignItems: 'center',
         px: 2, flexShrink: 0,
-        borderBottom: '1px solid rgba(0, 0, 0, 0.05)',
+        bgcolor: '#1e3a5f',
+        position: 'relative',
+        overflow: 'hidden',
       }}>
+        {/* Subtle diagonal accent */}
+        <Box sx={{
+          position: 'absolute', right: -20, top: -10, width: 120, height: 80,
+          bgcolor: 'rgba(255,255,255,0.04)', borderRadius: '50%',
+          transform: 'rotate(15deg)',
+        }} />
         <Box
           component="img"
           src="/calf-logo.png"
           alt="Kopi Calf"
           sx={{
-            width: collapsed ? 28 : 38, height: 'auto', borderRadius: 2,
+            width: collapsed ? 30 : 36, height: 'auto', borderRadius: 1.5,
             transition: 'width 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
             objectFit: 'contain',
           }}
         />
+        {!collapsed && (
+          <Box sx={{ ml: 1.5 }}>
+            <Typography sx={{
+              fontSize: 14, fontWeight: 800, color: '#ffffff',
+              lineHeight: 1.2, letterSpacing: '-0.3px',
+              fontFamily: 'inherit',
+            }}>
+              KOPI CALF
+            </Typography>
+            <Typography sx={{
+              fontSize: 9.5, color: 'rgba(255,255,255,0.55)',
+              lineHeight: 1.2, letterSpacing: '0.5px',
+              fontFamily: 'inherit',
+            }}>
+              GROUP INTERNAL ERP
+            </Typography>
+          </Box>
+        )}
       </Box>
 
+      {/* ── Divider label: MAIN NAVIGATION ── */}
+      {!collapsed && (
+        <Box sx={{ px: 2, pt: 2, pb: 0.5 }}>
+          <Typography sx={{
+            fontSize: 9.5, fontWeight: 700, color: '#94a3b8',
+            letterSpacing: '1px', textTransform: 'uppercase',
+            fontFamily: 'inherit',
+          }}>
+            Main Navigation
+          </Typography>
+        </Box>
+      )}
+
       {/* ── Navigation ── */}
-      <Box sx={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', py: 1.5 }}>
+      <Box sx={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', py: collapsed ? 1 : 0.5 }}>
         {NAV_ITEMS.map((item) => (
           <NavItem
             key={item.label}
@@ -381,8 +419,8 @@ function DesktopSidebar({
       {/* ── Bottom ── */}
       <Box sx={{
         flexShrink: 0,
-        borderTop: '1px solid rgba(0, 0, 0, 0.05)',
-        bgcolor: 'rgba(250, 250, 250, 0.5)',
+        borderTop: '1px solid #e2e8f0',
+        bgcolor: '#f8fafc',
       }}>
         {/* Collapse toggle */}
         <Box
@@ -392,7 +430,7 @@ function DesktopSidebar({
             width: '100%', minHeight: 36, px: 2, py: 0.75,
             cursor: 'pointer', color: '#94a3b8',
             transition: 'all 0.15s ease',
-            '&:hover': { bgcolor: 'rgba(0, 0, 0, 0.03)', color: '#475569' },
+            '&:hover': { bgcolor: 'rgba(30, 41, 59, 0.04)', color: '#475569' },
           }}
         >
           <Box sx={{ display: 'flex', flexShrink: 0 }}>
@@ -412,16 +450,16 @@ function DesktopSidebar({
         {/* User profile */}
         <Box sx={{
           display: 'flex', alignItems: 'center', gap: 1,
-          px: 2, py: 1,
+          px: 1.5, py: 1.25,
           borderRadius: 1.5, mx: 1, mb: 1,
-          bgcolor: 'rgba(0, 0, 0, 0.02)',
-          '&:hover': { bgcolor: 'rgba(79, 70, 229, 0.05)' },
+          bgcolor: '#f1f5f9',
           transition: 'background 0.15s ease',
+          '&:hover': { bgcolor: '#e2e8f0' },
         }}>
           <Avatar sx={{
-            width: 28, height: 28, fontSize: 12, fontWeight: 700,
-            bgcolor: '#4f46e5', color: '#ffffff', flexShrink: 0,
-            boxShadow: '0 0 0 2px rgba(79, 70, 229, 0.2)',
+            width: 30, height: 30, fontSize: 12, fontWeight: 700,
+            bgcolor: '#1e3a5f', color: '#ffffff', flexShrink: 0,
+            border: '2px solid rgba(30, 58, 95, 0.15)',
           }}>
             {(getUserEmail() ?? 'U').charAt(0).toUpperCase()}
           </Avatar>
@@ -452,7 +490,7 @@ function DesktopSidebar({
                     flexShrink: 0,
                   }}
                 >
-                  <LogoutIcon sx={{ fontSize: 13 }} />
+                  <LogoutIcon sx={{ fontSize: 14 }} />
                 </IconButton>
               </Tooltip>
             </>
@@ -464,7 +502,7 @@ function DesktopSidebar({
 }
 
 // ============================================================================
-// SIDEBAR (Mobile) — glassmorphism
+// SIDEBAR (Mobile) — clean white
 // ============================================================================
 function MobileSidebar({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
@@ -493,29 +531,36 @@ function MobileSidebar({ onNavigate }: { onNavigate?: () => void }) {
     <Box sx={{
       width: DRAWER_WIDTH, minWidth: DRAWER_WIDTH, height: '100%',
       display: 'flex', flexDirection: 'column',
-      bgcolor: 'rgba(255, 255, 255, 0.92)',
-      backdropFilter: 'blur(20px)',
-      WebkitBackdropFilter: 'blur(20px)',
+      bgcolor: '#ffffff',
+      borderRight: '1px solid #e2e8f0',
     }}>
-      {/* Header */}
+      {/* Header — dark navy brand bar */}
       <Box sx={{
-        height: HEADER_HEIGHT, display: 'flex', alignItems: 'center', justifyContent: 'center',
-        px: 2, flexShrink: 0, borderBottom: '1px solid rgba(0, 0, 0, 0.05)',
+        height: HEADER_HEIGHT, display: 'flex', alignItems: 'center',
+        px: 2, flexShrink: 0, bgcolor: '#1e3a5f',
       }}>
-        <Box component="img" src="/calf-logo.png" alt="Kopi Calf" sx={{ width: 38, height: 'auto', borderRadius: 2, objectFit: 'contain' }} />
+        <Box component="img" src="/calf-logo.png" alt="Kopi Calf" sx={{ width: 36, height: 'auto', borderRadius: 1.5, objectFit: 'contain' }} />
+        <Box sx={{ ml: 1.5 }}>
+          <Typography sx={{ fontSize: 14, fontWeight: 800, color: '#ffffff', lineHeight: 1.2, letterSpacing: '-0.3px' }}>
+            KOPI CALF
+          </Typography>
+          <Typography sx={{ fontSize: 9.5, color: 'rgba(255,255,255,0.55)', lineHeight: 1.2, letterSpacing: '0.5px' }}>
+            GROUP INTERNAL ERP
+          </Typography>
+        </Box>
       </Box>
 
       {/* Navigation */}
-      <Box sx={{ flex: 1, overflowY: 'auto', py: 1.5 }}>
+      <Box sx={{ flex: 1, overflowY: 'auto', py: 1 }}>
         {NAV_ITEMS.map((item) => (
           <NavItem key={item.label} item={item} openGroups={openGroups} toggleGroup={toggleGroup} pathname={pathname} collapsed={false} onNavigate={onNavigate} level={0} />
         ))}
       </Box>
 
       {/* Account */}
-      <Box sx={{ borderTop: '1px solid rgba(0, 0, 0, 0.05)', px: 2, py: 1.5, flexShrink: 0, bgcolor: 'rgba(250, 250, 250, 0.5)' }}>
+      <Box sx={{ borderTop: '1px solid #e2e8f0', px: 1.5, py: 1.25, flexShrink: 0, bgcolor: '#f8fafc' }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Avatar sx={{ width: 28, height: 28, fontSize: 12, fontWeight: 700, bgcolor: '#4f46e5', color: '#ffffff', flexShrink: 0, boxShadow: '0 0 0 2px rgba(79, 70, 229, 0.2)' }}>
+          <Avatar sx={{ width: 30, height: 30, fontSize: 12, fontWeight: 700, bgcolor: '#1e3a5f', color: '#ffffff', flexShrink: 0, border: '2px solid rgba(30, 58, 95, 0.15)' }}>
             {(getUserEmail() ?? 'U').charAt(0).toUpperCase()}
           </Avatar>
           <Box sx={{ flex: 1, minWidth: 0 }}>
@@ -528,7 +573,7 @@ function MobileSidebar({ onNavigate }: { onNavigate?: () => void }) {
           </Box>
           <Tooltip title="Logout">
             <IconButton size="small" onClick={onNavigate} sx={{ color: '#cbd5e1', p: 0.5, '&:hover': { color: '#ef4444', bgcolor: '#fef2f2' } }}>
-              <LogoutIcon sx={{ fontSize: 13 }} />
+              <LogoutIcon sx={{ fontSize: 14 }} />
             </IconButton>
           </Tooltip>
         </Box>
@@ -572,7 +617,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const sidebarWidth = desktopCollapsed ? COLLAPSED_WIDTH : DRAWER_WIDTH;
 
   return (
-    <Box sx={{ display: 'flex', minHeight: '100dvh', bgcolor: '#f8fafc' }}>
+    <Box sx={{ display: 'flex', minHeight: '100dvh', bgcolor: '#f1f5f9' }}>
       {/* Desktop sidebar */}
       {!isMobile && (
         <Box sx={{
@@ -613,22 +658,22 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           display: 'flex', flexDirection: 'column',
         }}
       >
-        {/* Mobile top bar */}
+        {/* Mobile top bar — dark navy brand */}
         <Box sx={{
           display: { xs: 'flex', md: 'none' },
           alignItems: 'center', px: 2, height: HEADER_HEIGHT,
-          bgcolor: 'rgba(255, 255, 255, 0.90)',
-          backdropFilter: 'blur(12px)',
-          WebkitBackdropFilter: 'blur(12px)',
-          borderBottom: '1px solid rgba(0,0,0,0.06)',
+          bgcolor: '#1e3a5f',
           position: 'sticky', top: 0, zIndex: 10, flexShrink: 0, gap: 1.5,
         }}>
-          <IconButton onClick={() => setMobileOpen(true)} size="small" sx={{ border: '1px solid rgba(0,0,0,0.08)', borderRadius: 1.5 }}>
+          <IconButton onClick={() => setMobileOpen(true)} size="small" sx={{ color: '#ffffff', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 1.5 }}>
             <MenuIcon fontSize="small" />
           </IconButton>
-          <Box component="img" src="/calf-logo.png" alt="Kopi Calf" sx={{ width: 26, height: 'auto', borderRadius: 1.5, flexShrink: 0, objectFit: 'contain' }} />
+          <Box component="img" src="/calf-logo.png" alt="Kopi Calf" sx={{ width: 28, height: 'auto', borderRadius: 1.5, flexShrink: 0, objectFit: 'contain' }} />
+          <Typography sx={{ fontSize: 13, fontWeight: 800, color: '#ffffff', letterSpacing: '-0.3px' }}>
+            KOPI CALF ERP
+          </Typography>
           <Box sx={{ flexGrow: 1 }} />
-          <Avatar sx={{ width: 28, height: 28, fontSize: 12, fontWeight: 700, bgcolor: '#4f46e5', boxShadow: '0 0 0 2px rgba(79, 70, 229, 0.2)' }}>
+          <Avatar sx={{ width: 28, height: 28, fontSize: 12, fontWeight: 700, bgcolor: 'rgba(255,255,255,0.2)', color: '#ffffff' }}>
             {(getUserEmail() ?? 'U').charAt(0).toUpperCase()}
           </Avatar>
         </Box>
@@ -636,14 +681,14 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         {/* Page content */}
         <Box sx={{
           flexGrow: 1, p: { xs: 2, sm: 3 },
-          bgcolor: '#f8fafc', overflowX: 'hidden',
+          bgcolor: '#f1f5f9', overflowX: 'hidden',
           pb: { xs: `${BOTTOM_NAV_HEIGHT + 16}px`, md: 3 },
         }}>
           {children}
         </Box>
       </Box>
 
-      {/* Mobile bottom nav — glassmorphism */}
+      {/* Mobile bottom nav — clean white */}
       <Paper
         elevation={0}
         sx={{
@@ -651,11 +696,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           display: { xs: 'flex', md: 'none' },
           pb: 'env(safe-area-inset-bottom)', zIndex: 1200,
           height: BOTTOM_NAV_HEIGHT,
-          bgcolor: 'rgba(255, 255, 255, 0.88)',
-          backdropFilter: 'blur(16px)',
-          WebkitBackdropFilter: 'blur(16px)',
-          borderTop: '1px solid rgba(0, 0, 0, 0.06)',
-          boxShadow: '0 -4px 24px rgba(0, 0, 0, 0.04)',
+          bgcolor: '#ffffff',
+          borderTop: '1px solid #e2e8f0',
+          boxShadow: '0 -2px 12px rgba(0, 0, 0, 0.04)',
         }}
       >
         <BottomNavigation
@@ -667,7 +710,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               minWidth: 0, color: '#94a3b8', fontSize: 10.5,
               fontFamily: 'inherit', fontWeight: 500,
               transition: 'all 0.15s ease',
-              '&.Mui-selected': { color: '#4f46e5', fontWeight: 600 },
+              '&.Mui-selected': { color: '#1e3a5f', fontWeight: 600 },
             },
           }}
           onChange={(_event, value: string) => {

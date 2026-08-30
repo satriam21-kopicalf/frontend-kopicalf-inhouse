@@ -1,14 +1,35 @@
 'use client';
 
-import PagePlaceholder from '@/components/PagePlaceholder';
+import { Box, Typography } from '@mui/material';
+import PageHeader from '@/components/PageHeader';
 
 export default function SccReportingPage() {
   return (
-    <PagePlaceholder
-      title="Reporting"
-      subtitle="COGS Ratio, Usage Ratio, and Shopping Estimation reports per outlet"
-      breadcrumbs={['Supply Chain & Cost Control', 'Reporting']}
-      description="Periodic cost control reports: COGS vs target per outlet, usage ratio drill-down per product, and shopping estimation recommendations."
-    />
+    <Box>
+      <PageHeader
+        title="Supply Chain Reporting"
+        subtitle="COGS, Usage Ratio, and Shopping Estimation reports"
+        breadcrumbs={['Supply Chain & Cost Control', 'Reporting']}
+      />
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: 'calc(100vh - 200px)',
+        }}
+      >
+        <Typography
+          sx={{
+            fontSize: 18,
+            fontWeight: 500,
+            color: 'text.secondary',
+            fontStyle: 'italic',
+          }}
+        >
+          Under Development
+        </Typography>
+      </Box>
+    </Box>
   );
 }
