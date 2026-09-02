@@ -13,15 +13,15 @@ export interface COGSRatioData {
   branchName: string;
   branchType: 'OUTLET' | 'HUB WH' | 'HUB CK';
   period: string; // YYYY-MM format
-  revenue: number; // Total revenue dari POS
-  cogs: number; // HPP aktual dari stok
+  revenue: number; // Total revenue dari POS (grand_total)
+  cogs: number; // HPP estimated (65% dari revenue)
   cogsRatio: number; // Percentage
   targetCogsRatio: number; // Target default 65%
   gap: number; // Selisih dari target
-  teoretisUsage: number; // Usage teoretis berdasarkan BOM
-  actualUsage: number; // Usage aktual dari SO
+  teoretisUsage: number; // Usage teoretis berdasarkan sales
+  actualUsage: number; // Usage aktual dari sales
   usageRatio: number; // Percentage actual/teoretis
-  flagged: boolean; // Apakah perlu investigasi (>105% usage 3+ hari)
+  flagged: boolean; // Whether needs investigation (>105% usage 3+ days)
   trend: 'up' | 'down' | 'flat';
   lastUpdated: string;
 }
@@ -45,24 +45,24 @@ export interface EstimasiBelanjaItem {
   productCode: string;
   productName: string;
   uomName: string;
-  avgDailyUsage: number; // Rata-rata penggunaan per hari
-  currentStock: number; // Stok saat ini
-  daysInStock: number; // Berapa hari stok akan habis
-  daysTarget: number; // Target hari stok
-  estimasiQty: number; // Qty yang perlu dipesan
-  priceUnit: number; // Harga per unit
-  estimasiValue: number; // Total estimasi nilai
-  catatan: string; // Catatan
+  avgDailyUsage: number; // Average daily usage
+  currentStock: number; // Current stock
+  daysInStock: number; // Days until stock runs out
+  daysTarget: number; // Target days of stock
+  estimasiQty: number; // Quantity to order
+  priceUnit: number; // Unit price
+  estimasiValue: number; // Total estimated value
+  catatan: string; // Notes
 }
 
 export const MOCK_ESTIMASI_BELANJA: EstimasiBelanjaItem[] = [
-  { productId: 1, productCode: 'RBBA-00001', productName: 'Biji Kopi Arabica Premium', uomName: 'KG', avgDailyUsage: 2.8, currentStock: 12, daysInStock: 4.3, daysTarget: 14, estimasiQty: 39.2, priceUnit: 150000, estimasiValue: 5_880_000, catatan: 'Stok saat ini: 12 KG — Urgensi: HIGH' },
-  { productId: 2, productCode: 'RBCB-00001', productName: 'Biji Kopi Cold Brew Blend', uomName: 'KG', avgDailyUsage: 1.5, currentStock: 4, daysInStock: 2.7, daysTarget: 14, estimasiQty: 21.0, priceUnit: 180000, estimasiValue: 3_780_000, catatan: 'Stok saat ini: 4 KG — Urgensi: CRITICAL' },
-  { productId: 3, productCode: 'RMFB-00001', productName: 'Susu UHT Full Cream', uomName: 'L', avgDailyUsage: 15.2, currentStock: 24, daysInStock: 1.6, daysTarget: 7, estimasiQty: 106.4, priceUnit: 14000, estimasiValue: 1_489_600, catatan: 'Stok saat ini: 24 L — Urgensi: CRITICAL' },
-  { productId: 4, productCode: 'RMDK-00002', productName: 'Gula Pasir', uomName: 'KG', avgDailyUsage: 4.2, currentStock: 8, daysInStock: 1.9, daysTarget: 7, estimasiQty: 29.4, priceUnit: 12000, estimasiValue: 352_800, catatan: 'Stok saat ini: 8 KG — Urgensi: HIGH' },
-  { productId: 5, productCode: 'RMMK-00001', productName: 'Daging Ayam Fillet', uomName: 'KG', avgDailyUsage: 3.1, currentStock: 4.5, daysInStock: 1.5, daysTarget: 7, estimasiQty: 21.7, priceUnit: 30000, estimasiValue: 651_000, catatan: 'Stok saat ini: 4.5 KG — Urgensi: CRITICAL' },
-  { productId: 6, productCode: 'PCPB-00001', productName: 'Cup Plastik 16oz', uomName: 'PCS', avgDailyUsage: 280, currentStock: 350, daysInStock: 1.3, daysTarget: 14, estimasiQty: 3920, priceUnit: 800, estimasiValue: 3_136_000, catatan: 'Stok saat ini: 350 PCS — Urgensi: HIGH' },
-  { productId: 7, productCode: 'RMDK-00002', productName: 'Liquid Creamer', uomName: 'L', avgDailyUsage: 4.8, currentStock: 6, daysInStock: 1.3, daysTarget: 7, estimasiQty: 33.6, priceUnit: 25000, estimasiValue: 840_000, catatan: 'Stok saat ini: 6 L — Urgensi: CRITICAL' },
+  { productId: 1, productCode: 'RBBA-00001', productName: 'Biji Kopi Arabica Premium', uomName: 'KG', avgDailyUsage: 2.8, currentStock: 12, daysInStock: 4.3, daysTarget: 14, estimasiQty: 39.2, priceUnit: 150000, estimasiValue: 5_880_000, catatan: 'Current stock: 12 KG — Urgency: HIGH' },
+  { productId: 2, productCode: 'RBCB-00001', productName: 'Biji Kopi Cold Brew Blend', uomName: 'KG', avgDailyUsage: 1.5, currentStock: 4, daysInStock: 2.7, daysTarget: 14, estimasiQty: 21.0, priceUnit: 180000, estimasiValue: 3_780_000, catatan: 'Current stock: 4 KG — Urgency: CRITICAL' },
+  { productId: 3, productCode: 'RMFB-00001', productName: 'Susu UHT Full Cream', uomName: 'L', avgDailyUsage: 15.2, currentStock: 24, daysInStock: 1.6, daysTarget: 7, estimasiQty: 106.4, priceUnit: 14000, estimasiValue: 1_489_600, catatan: 'Current stock: 24 L — Urgency: CRITICAL' },
+  { productId: 4, productCode: 'RMDK-00002', productName: 'Gula Pasir', uomName: 'KG', avgDailyUsage: 4.2, currentStock: 8, daysInStock: 1.9, daysTarget: 7, estimasiQty: 29.4, priceUnit: 12000, estimasiValue: 352_800, catatan: 'Current stock: 8 KG — Urgency: HIGH' },
+  { productId: 5, productCode: 'RMMK-00001', productName: 'Daging Ayam Fillet', uomName: 'KG', avgDailyUsage: 3.1, currentStock: 4.5, daysInStock: 1.5, daysTarget: 7, estimasiQty: 21.7, priceUnit: 30000, estimasiValue: 651_000, catatan: 'Current stock: 4.5 KG — Urgency: CRITICAL' },
+  { productId: 6, productCode: 'PCPB-00001', productName: 'Cup Plastik 16oz', uomName: 'PCS', avgDailyUsage: 280, currentStock: 350, daysInStock: 1.3, daysTarget: 14, estimasiQty: 3920, priceUnit: 800, estimasiValue: 3_136_000, catatan: 'Current stock: 350 PCS — Urgency: HIGH' },
+  { productId: 7, productCode: 'RMDK-00002', productName: 'Liquid Creamer', uomName: 'L', avgDailyUsage: 4.8, currentStock: 6, daysInStock: 1.3, daysTarget: 7, estimasiQty: 33.6, priceUnit: 25000, estimasiValue: 840_000, catatan: 'Current stock: 6 L — Urgency: CRITICAL' },
 ];
 
 // ============================================================================
@@ -4273,6 +4273,7 @@ export interface StockOpname {
   totalValue: number; varianceValue: number;
   status: SoStatus; submittedBy: string; approvedBy: string | null;
   createdAt: string; updatedAt: string;
+  details?: StockOpnameDetail[];
 }
 
 export interface StockOpnameDetail {
@@ -4411,6 +4412,7 @@ export interface WasteRecord {
   totalValue: number; totalQty: number;
   status: WasteStatus; submittedBy: string; approvedBy: string | null;
   notes: string; createdAt: string; updatedAt: string;
+  details?: WasteDetail[];
 }
 
 export interface WasteDetail {

@@ -24,7 +24,7 @@ export default function PhotoEvidence({
   photos,
   onPhotosChange,
   minPhotos = 3,
-  label = 'Bukti Foto (minimum 3 foto)',
+  label = 'Photo Evidence (minimum 3 photos)',
 }: PhotoEvidenceProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const meetsMin = photos.length >= minPhotos;
@@ -95,7 +95,7 @@ export default function PhotoEvidence({
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
               <WarningIcon fontSize="small" sx={{ color: 'warning.main' }} />
               <Typography variant="caption" sx={{ color: 'warning.dark', fontWeight: 600, display: { xs: 'none', sm: 'inline' } }}>
-                Minimal {minPhotos} foto wajib
+                Minimum {minPhotos} photos required
               </Typography>
             </Box>
           )}
@@ -107,7 +107,7 @@ export default function PhotoEvidence({
             disabled={photos.length >= 10}
             sx={{ fontSize: 12 }}
           >
-            Tambah
+            Add Photo
           </Button>
         </Box>
       </Box>
@@ -154,10 +154,10 @@ export default function PhotoEvidence({
         >
           <AddPhotoIcon sx={{ fontSize: { xs: 32, sm: 40 }, color: 'warning.dark', mb: 0.5 }} />
           <Typography variant="body2" sx={{ color: 'warning.dark', fontWeight: 600 }}>
-            Klik untuk upload foto bukti
+            Click to upload evidence photo
           </Typography>
           <Typography variant="caption" sx={{ color: 'warning.dark' }}>
-            Format: JPG, PNG, WEBP — Maks 10 foto
+            Format: JPG, PNG, WEBP — Max 10 photos
           </Typography>
         </Paper>
       ) : (
@@ -177,7 +177,7 @@ export default function PhotoEvidence({
                 <Box
                   component="img"
                   src={src}
-                  alt={`Bukti foto ${idx + 1}`}
+                  alt={`Evidence photo ${idx + 1}`}
                   sx={{
                     width: '100%',
                     height: { xs: 100, sm: 120 },
@@ -205,7 +205,7 @@ export default function PhotoEvidence({
                   </Typography>
                 </Box>
                 {/* Delete button */}
-                <Tooltip title="Hapus foto">
+                <Tooltip title="Remove photo">
                   <IconButton
                     size="small"
                     className="delete-btn"
@@ -257,7 +257,7 @@ export default function PhotoEvidence({
               >
                 <AddPhotoIcon sx={{ fontSize: { xs: 28, sm: 32 }, mb: 0.5 }} />
                 <Typography variant="caption" sx={{ fontWeight: 600, fontSize: 11 }}>
-                  Tambah
+                  Add
                 </Typography>
               </Box>
             </Grid>
@@ -268,7 +268,7 @@ export default function PhotoEvidence({
       {/* Footer hint */}
       {meetsMin && (
         <Typography variant="caption" color="success.main" sx={{ mt: 1, display: 'block' }}>
-          {photos.length} foto bukti terlampir — form siap disubmit
+          {photos.length} evidence photos attached — form ready to submit
         </Typography>
       )}
     </Box>

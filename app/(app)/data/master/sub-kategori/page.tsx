@@ -1,14 +1,15 @@
 'use client';
 
-import { useState } from 'react';
-import { Box, Typography, Snackbar, Alert } from '@mui/material';
+import { useState, useEffect } from 'react';
+import { Box, Snackbar, Alert, CircularProgress, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import { useMemo } from 'react';
 import PageHeader from '@/components/PageHeader';
 import ModernTable from '@/components/ModernTable';
 import DataDrawer, { DrawerField, DrawerMode } from '@/components/DataDrawer';
 import { TableColumn } from '@/components/ModernTable';
-import { MOCK_SUB_CATEGORIES, MOCK_CATEGORIES, SubCategory } from '@/lib/mockData';
+import { SubCategory, Category } from '@/lib/api/client';
+import { apiClient } from '@/lib/api/client';
 
 const FIELDS: DrawerField[] = [
   { name: 'name', label: 'Sub Category Name', required: true, gridSpan: 2 },
@@ -36,9 +37,12 @@ const emptyValues = (): Record<string, unknown> => ({
 });
 
 export default function SubKategoriPage() {
-  const [data, setData] = useState<SubCategory[]>(() =>
-    [...MOCK_SUB_CATEGORIES].sort((a, b) => a.name.localeCompare(b.name))
-  );
+  const [data, setData] = useState<SubCategory[]>([]);
+  const [allCategories, setAllCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
+  const [categoryFilter, setCategoryFilter] = useState<number | 'all'>('all');
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerMode, setDrawerMode] = useState<DrawerMode>(null);
@@ -47,9 +51,21 @@ export default function SubKategoriPage() {
   const [saving, setSaving] = useState(false);
   const [snack, setSnack] = useState({ open: false, msg: '', sev: 'success' as 'success' | 'error' });
 
+  useEffect(() => {
+    Promise.all([
+      apiClient.getSubCategories(),
+      apiClient.getCategories(),
+    ]).then(([subCats, cats]) => {
+      setData(subCats.sort((a, b) => a.name.localeCompare(b.name)));
+      setAllCategories(cats);
+    }).catch((err) => {
+      setError(err instanceof Error ? err.message : 'Failed to load sub categories');
+    }).finally(() => setLoading(false));
+  }, []);
+
   const categoryOptions = useMemo(() =>
-    MOCK_CATEGORIES.map((c) => ({ value: c.categoryId, label: c.name })),
-    []
+    allCategories.map((c) => ({ value: c.esbId, label: c.name })),
+    [allCategories]
   );
 
   const fieldsWithOptions = useMemo(() =>
@@ -57,8 +73,17 @@ export default function SubKategoriPage() {
     [categoryOptions]
   );
 
+  const filtered = useMemo(() => {
+    return data.filter(r => {
+      if (statusFilter !== 'all' && ((r.flagActive ?? true) !== (statusFilter === 'active'))) return false;
+      if (categoryFilter !== 'all' && r.categoryId !== categoryFilter) return false;
+      return true;
+    });
+  }, [data, statusFilter, categoryFilter]);
+
+  // SubCategory.categoryId = category's esb_id; look up by esbId
   const getCategoryName = (categoryId: number): string => {
-    const cat = MOCK_CATEGORIES.find((c) => c.categoryId === categoryId || c.esbId === categoryId);
+    const cat = allCategories.find((c) => c.esbId === categoryId);
     return cat?.name ?? `Cat ${categoryId}`;
   };
 
@@ -81,7 +106,7 @@ export default function SubKategoriPage() {
     setValues((prev) => {
       const next = { ...prev, [name]: value };
       if (name === 'categoryId') {
-        const cat = MOCK_CATEGORIES.find((c) => c.categoryId === Number(value));
+        const cat = allCategories.find((c) => c.esbId === Number(value));
         next.categoryName = cat?.name ?? '';
       }
       return next;
@@ -90,41 +115,47 @@ export default function SubKategoriPage() {
 
   const handleSave = async () => {
     setSaving(true);
-    await new Promise((r) => setTimeout(r, 600));
-    const now = fmtNow();
-    if (drawerMode === 'add') {
-      const cat = MOCK_CATEGORIES.find((c) => c.categoryId === Number(values.categoryId));
-      const newSub: SubCategory = {
-        subCategoryId: Number(values.subCategoryId),
-        esbId: Number(values.esbId),
-        code: String(values.code ?? ''),
-        name: String(values.name ?? ''),
-        categoryId: Number(values.categoryId),
-        categoryName: cat?.name ?? '',
-        deadStock: Number(values.deadStock ?? 30),
-        flagActive: Boolean(values.flagActive),
-        syncedAt: fmtNow(),
-        updatedAt: now,
-      };
-      setData((prev) => [...prev, newSub].sort((a, b) => a.name.localeCompare(b.name)));
-      showSnack('Sub Category added successfully');
-    } else if (drawerMode === 'edit' && selected) {
-      const updated: SubCategory = { ...selected, ...values, categoryId: Number(values.categoryId), updatedAt: now } as SubCategory;
-      setData((prev) => prev.map((d) => d.subCategoryId === updated.subCategoryId ? updated : d).sort((a, b) => a.name.localeCompare(b.name)));
-      showSnack('Sub Category updated successfully');
+    try {
+      const now = fmtNow();
+      if (drawerMode === 'add') {
+        const cat = allCategories.find((c) => c.esbId === Number(values.categoryId));
+        const newSub: SubCategory = {
+          subCategoryId: Number(values.subCategoryId),
+          esbId: Number(values.esbId ?? 0),
+          code: String(values.code ?? ''),
+          name: String(values.name ?? ''),
+          categoryId: Number(values.categoryId),
+          categoryName: cat?.name ?? '',
+          deadStock: Number(values.deadStock ?? 30),
+          flagActive: Boolean(values.flagActive),
+          syncedAt: fmtNow(),
+          updatedAt: now,
+        };
+        setData((prev) => [...prev, newSub].sort((a, b) => a.name.localeCompare(b.name)));
+        showSnack('Sub Category added successfully');
+      } else if (drawerMode === 'edit' && selected) {
+        const updated: SubCategory = { ...selected, ...values, categoryId: Number(values.categoryId), updatedAt: now } as SubCategory;
+        setData((prev) => prev.map((d) => d.subCategoryId === updated.subCategoryId ? updated : d).sort((a, b) => a.name.localeCompare(b.name)));
+        showSnack('Sub Category updated successfully');
+      }
+      setDrawerOpen(false);
+    } catch (err) {
+      showSnack(err instanceof Error ? err.message : 'Failed to save sub category', 'error');
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
-    setDrawerOpen(false);
   };
 
   const handleDelete = async () => {
     if (!selected) return;
     setSaving(true);
-    await new Promise((r) => setTimeout(r, 500));
-    setData((prev) => prev.filter((d) => d.subCategoryId !== selected.subCategoryId));
-    showSnack('Sub Category deleted', 'error');
-    setSaving(false);
-    setDrawerOpen(false);
+    try {
+      setData((prev) => prev.filter((d) => d.subCategoryId !== selected.subCategoryId));
+      showSnack('Sub Category deleted', 'error');
+    } finally {
+      setSaving(false);
+      setDrawerOpen(false);
+    }
   };
 
   const columns: TableColumn<SubCategory>[] = useMemo(() => [
@@ -134,7 +165,11 @@ export default function SubKategoriPage() {
     },
     {
       id: 'esbId', label: 'ESB Id', width: 70, hideOnMobile: true,
-      render: (r) => <Box component="span" sx={{ fontFamily: 'monospace', fontSize: 12, color: 'text.secondary' }}>{r.esbId}</Box>,
+      render: (r) => <Box component="span" sx={{ fontFamily: 'monospace', fontSize: 12, color: 'text.secondary' }}>{r.esbId ?? 0}</Box>,
+    },
+    {
+      id: 'code', label: 'Code', width: 100, hideOnMobile: true,
+      render: (r) => <Box component="span" sx={{ fontFamily: 'monospace', fontWeight: 600, fontSize: 12 }}>{r.code ?? '-'}</Box>,
     },
     {
       id: 'name', label: 'Sub Category Name', sortable: true,
@@ -151,7 +186,7 @@ export default function SubKategoriPage() {
     {
       id: 'deadStock', label: 'Dead Stock', align: 'center', hideOnMobile: true,
       render: (r) => {
-        const days = r.deadStock;
+        const days = r.deadStock ?? 30;
         const bg = days <= 3 ? 'error.lighter' : days <= 7 ? 'warning.lighter' : 'grey.100';
         const fg = days <= 3 ? 'error.dark' : days <= 7 ? 'warning.dark' : 'text.primary';
         return <Box component="span" sx={{ px: 1.5, py: 0.5, borderRadius: 1, fontWeight: 600, fontSize: 12, bgcolor: bg, color: fg }}>{days} days</Box>;
@@ -160,30 +195,69 @@ export default function SubKategoriPage() {
     {
       id: 'flagActive', label: 'Status', align: 'center', sortable: true,
       render: (r) => (
-        <Box component="span" sx={{ px: 1.5, py: 0.5, borderRadius: 1, fontWeight: 600, fontSize: 12, bgcolor: r.flagActive ? 'success.lighter' : 'grey.200', color: r.flagActive ? 'success.dark' : 'text.secondary' }}>
-          {r.flagActive ? 'Active' : 'Inactive'}
+        <Box component="span" sx={{ px: 1.5, py: 0.5, borderRadius: 1, fontWeight: 600, fontSize: 12, bgcolor: (r.flagActive ?? true) ? 'success.lighter' : 'grey.200', color: (r.flagActive ?? true) ? 'success.dark' : 'text.secondary' }}>
+          {(r.flagActive ?? true) ? 'Active' : 'Inactive'}
         </Box>
       ),
     },
-  ], []);
+  ], [allCategories]);
 
   const actions = [
     { label: 'Edit', icon: <EditIcon fontSize="small" />, color: 'primary' as const, onClick: (r: unknown) => handleOpen('edit', r as SubCategory), tooltip: 'Edit sub category' },
     { label: 'Delete', icon: <DeleteIcon fontSize="small" />, color: 'error' as const, onClick: (r: unknown) => handleOpen('delete', r as SubCategory), tooltip: 'Delete sub category' },
   ];
 
+  if (loading) {
+    return (
+      <Box>
+        <PageHeader title="Sub Category" subtitle="Sub category master data — linked to categories with dead stock threshold settings" breadcrumbs={['Data', 'Sub Category']} />
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}>
+          <CircularProgress />
+        </Box>
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box>
+        <PageHeader title="Sub Category" subtitle="Sub category master data — linked to categories with dead stock threshold settings" breadcrumbs={['Data', 'Sub Category']} />
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}>
+          <Alert severity="error" variant="filled">{error}</Alert>
+        </Box>
+      </Box>
+    );
+  }
+
   return (
     <Box>
       <PageHeader title="Sub Category" subtitle="Sub category master data — linked to categories with dead stock threshold settings" breadcrumbs={['Data', 'Sub Category']} />
+      <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap', alignItems: 'center' }}>
+        <FormControl size="small" sx={{ minWidth: 140 }}>
+          <InputLabel>Status</InputLabel>
+          <Select label="Status" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as 'all' | 'active' | 'inactive')}>
+            <MenuItem value="all">All</MenuItem>
+            <MenuItem value="active">Active</MenuItem>
+            <MenuItem value="inactive">Inactive</MenuItem>
+          </Select>
+        </FormControl>
+        <FormControl size="small" sx={{ minWidth: 160 }}>
+          <InputLabel>Category</InputLabel>
+          <Select label="Category" value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value as number | 'all')}>
+            <MenuItem value="all">All Categories</MenuItem>
+            {allCategories.map(c => <MenuItem key={c.esbId} value={c.esbId}>{c.name}</MenuItem>)}
+          </Select>
+        </FormControl>
+      </Box>
       <ModernTable
         title="Sub Categories"
-        subtitle={`${data.length} total sub categories`}
+        subtitle={`${filtered.length} of ${data.length} sub categories`}
         columns={columns}
-        data={data}
+        data={filtered}
         keyField="subCategoryId"
         actions={actions}
         searchPlaceholder="Search by name or category..."
-        searchFields={['name', 'categoryName']}
+        searchFields={['code', 'name', 'categoryName']}
         pagination={true}
         defaultRowsPerPage={50}
         rowsPerPageOptions={[10, 25, 50, 100]}

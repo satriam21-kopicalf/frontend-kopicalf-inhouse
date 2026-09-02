@@ -5,23 +5,23 @@ import {
   Box, Typography, Tabs, Tab, Table, TableBody, TableCell,
   TableContainer, TableHead, TableRow, IconButton, Tooltip, Drawer,
   TextField, MenuItem, Snackbar, Alert, Select, FormControl,
-  InputLabel, InputAdornment, Button, Chip, Dialog, DialogTitle,
-  DialogContent, DialogActions, Stack,
+  InputLabel, InputAdornment, Button, Chip, useMediaQuery, useTheme,
 } from '@mui/material';
 import {
   Visibility as VisibilityIcon,
   Close as CloseIcon,
   Search as SearchIcon,
-  FilterList as FilterListIcon,
-  DateRange as DateRangeIcon,
-  InfoOutlined as InfoIcon,
-  CheckCircle as CheckCircleIcon,
-  Warning as WarningIcon,
+  Add as AddIcon,
   Tune as TuneIcon,
+  InfoOutlined as InfoIcon,
+  Warning as WarningIcon,
 } from '@mui/icons-material';
 import PageHeader from '@/components/PageHeader';
 import DataDrawer from '@/components/DataDrawer';
+import StockOpnameForm from '@/components/StockOpnameForm';
 import { MOCK_STOCK_OPNAMES, MOCK_STOCK_OPNAME_DETAILS, StockOpname, SoPeriodType, SoStatus } from '@/lib/mockData';
+import { useCreateStockOpname } from '@/lib/hooks/stock-opname';
+import type { StockOpnameFormValues } from '@/components/StockOpnameForm';
 
 const fmtCurr = (n: number) =>
   new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(n);
@@ -40,6 +40,13 @@ const STATUS_COLORS: Record<SoStatus, { bg: string; color: string; label: string
 };
 
 export default function StockOpnamePage() {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
+  // Form drawer state
+  const [formDrawerOpen, setFormDrawerOpen] = useState(false);
+  const createMutation = useCreateStockOpname();
+
   const [records] = useState<StockOpname[]>(
     () => [...MOCK_STOCK_OPNAMES].sort((a, b) => b.soId - a.soId)
   );
@@ -58,6 +65,9 @@ export default function StockOpnamePage() {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteDrawerOpen, setDeleteDrawerOpen] = useState(false);
   const [toast, setToast] = useState({ open: false, msg: '', sev: 'success' as 'success' | 'error' });
+
+  // Mobile filter toggle state
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   // Filter modal state
   const [filterModalOpen, setFilterModalOpen] = useState(false);
@@ -131,6 +141,23 @@ export default function StockOpnamePage() {
     setToast({ open: true, msg: 'Stock Opname record deleted successfully.', sev: 'error' });
   };
 
+  const handleCreateStockOpname = async (data: StockOpnameFormValues) => {
+    await createMutation.mutateAsync({
+      branchId: data.branchId,
+      soDate: data.soDate,
+      periodType: data.periodType,
+      details: data.details.map((d) => ({
+        productCode: d.productCode,
+        balanceStock: d.balanceStock,
+        actualStock: d.actualStock,
+        notes: d.notes,
+      })),
+      notes: data.notes,
+    });
+    setFormDrawerOpen(false);
+    setToast({ open: true, msg: 'Stock Opname saved successfully!', sev: 'success' });
+  };
+
   const clearDateFilter = () => { setDateStart(''); setDateEnd(''); setPage(0); };
 
   const paginated = filtered.slice(page * ROWS_PER_PAGE, page * ROWS_PER_PAGE + ROWS_PER_PAGE);
@@ -189,6 +216,16 @@ export default function StockOpnamePage() {
         title="Stock Opname"
         subtitle="Stock opname records — inventory verification across all branches and period types"
         breadcrumbs={['Supply Chain & Cost Control', 'Stock Opname']}
+        actions={
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={() => setFormDrawerOpen(true)}
+            size="small"
+          >
+            New Stock Opname
+          </Button>
+        }
       />
 
       {/* ─── KPI Strip ─── */}
@@ -510,7 +547,7 @@ export default function StockOpnamePage() {
 
         {/* Drawer Content */}
         <Box sx={{ flex: 1, overflowY: 'auto', p: 3 }}>
-          <Stack spacing={2.5}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
             {/* Branch */}
             <FormControl size="small" fullWidth>
               <InputLabel>Branch</InputLabel>
@@ -598,7 +635,7 @@ export default function StockOpnamePage() {
                 />
               </Box>
             </Box>
-          </Stack>
+          </Box>
         </Box>
 
         {/* Drawer Actions */}
@@ -776,6 +813,53 @@ export default function StockOpnamePage() {
           {toast.msg}
         </Alert>
       </Snackbar>
+
+      {/* Form Drawer */}
+      <Drawer
+        anchor="right"
+        open={formDrawerOpen}
+        onClose={() => setFormDrawerOpen(false)}
+        slotProps={{
+          paper: {
+            sx: {
+              width: { xs: '100vw', sm: 600 },
+              borderRadius: { xs: 0, sm: '16px 0 0 16px' },
+              overflow: 'hidden',
+              display: 'flex',
+              flexDirection: 'column',
+            },
+          },
+          backdrop: { sx: { backdropFilter: 'blur(2px)', backgroundColor: 'rgba(0,0,0,0.4)' } },
+        }}
+      >
+        {/* Drawer Header */}
+        <Box sx={{
+          px: 3, py: 2,
+          borderBottom: '1px solid',
+          borderColor: 'divider',
+          bgcolor: 'primary.main',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          flexShrink: 0,
+        }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            <AddIcon sx={{ fontSize: 18, color: 'white' }} />
+            <Typography sx={{ fontWeight: 700, color: 'white', fontSize: 15 }}>
+              New Stock Opname
+            </Typography>
+          </Box>
+          <IconButton size="small" onClick={() => setFormDrawerOpen(false)} sx={{ color: 'white' }}>
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        </Box>
+
+        {/* Drawer Content */}
+        <Box sx={{ flex: 1, overflowY: 'auto', p: 3 }}>
+          <StockOpnameForm
+            onSubmit={handleCreateStockOpname}
+            onCancel={() => setFormDrawerOpen(false)}
+          />
+        </Box>
+      </Drawer>
     </Box>
   );
 }

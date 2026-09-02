@@ -1,25 +1,27 @@
 'use client';
 
-import { useState } from 'react';
-import { Box, Snackbar, Alert } from '@mui/material';
+import { useState, useEffect } from 'react';
+import { Box, Snackbar, Alert, CircularProgress, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import { useMemo } from 'react';
 import PageHeader from '@/components/PageHeader';
 import ModernTable from '@/components/ModernTable';
 import DataDrawer, { DrawerField, DrawerMode } from '@/components/DataDrawer';
-import { MOCK_CATEGORIES, Category } from '@/lib/mockData';
+import { Category } from '@/lib/api/client';
+import { apiClient } from '@/lib/api/client';
 import { TableColumn } from '@/components/ModernTable';
 
 const TYPE_OPTIONS = [
-  { value: 'Inventory', label: 'Inventory' },
-  { value: 'Non Inventory', label: 'Non Inventory' },
-  { value: 'Asset', label: 'Asset' },
+  { value: 'Beverage', label: 'Beverage' },
+  { value: 'Food', label: 'Food' },
+  { value: 'Ingredient', label: 'Ingredient' },
+  { value: 'Other', label: 'Other' },
 ];
 
 const FIELDS: DrawerField[] = [
   { name: 'name', label: 'Name', required: true, gridSpan: 2 },
   { name: 'code', label: 'Code', placeholder: 'e.g. FG-001' },
-  { name: 'type', label: 'Type', type: 'select', options: TYPE_OPTIONS, required: true },
+  { name: 'typeName', label: 'Type', type: 'select', options: TYPE_OPTIONS, required: true },
   { name: 'typeId', label: 'Type ID', type: 'number', disabled: true },
   { name: 'notes', label: 'Notes', placeholder: 'Optional notes...', gridSpan: 2 },
   { name: 'flagActive', label: 'Active', type: 'switch' },
@@ -31,10 +33,13 @@ const fmtNow = () => {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
 };
 
+const typeToId = (t: string) =>
+  t === 'Beverage' ? 1 : t === 'Food' ? 2 : t === 'Ingredient' ? 3 : 0;
+
 const emptyValues = (): Record<string, unknown> => ({
   name: '',
   code: '',
-  type: 'Inventory',
+  typeName: 'Beverage',
   typeId: 0,
   notes: '',
   flagActive: true,
@@ -42,12 +47,12 @@ const emptyValues = (): Record<string, unknown> => ({
   updatedAt: fmtNow(),
 });
 
-const typeToId = (t: string) => t === 'Inventory' ? 1 : t === 'Non Inventory' ? 2 : t === 'Asset' ? 3 : 0;
-
 export default function KategoriPage() {
-  const [data, setData] = useState<Category[]>(() =>
-    [...MOCK_CATEGORIES].sort((a, b) => a.name.localeCompare(b.name))
-  );
+  const [data, setData] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
+  const [typeFilter, setTypeFilter] = useState<'all' | 'Beverage' | 'Food' | 'Ingredient' | 'Other'>('all');
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerMode, setDrawerMode] = useState<DrawerMode>(null);
@@ -56,9 +61,24 @@ export default function KategoriPage() {
   const [saving, setSaving] = useState(false);
   const [snack, setSnack] = useState({ open: false, msg: '', sev: 'success' as 'success' | 'error' });
 
+  useEffect(() => {
+    apiClient.getCategories()
+      .then((cats) => setData(cats.sort((a, b) => a.name.localeCompare(b.name))))
+      .catch((err) => setError(err instanceof Error ? err.message : 'Failed to load categories'))
+      .finally(() => setLoading(false));
+  }, []);
+
   const showSnack = (msg: string, sev: 'success' | 'error' = 'success') => {
     setSnack({ open: true, msg, sev });
   };
+
+  const filtered = useMemo(() => {
+    return data.filter(r => {
+      if (statusFilter !== 'all' && ((r.flagActive ?? r.isActive ?? true) !== (statusFilter === 'active'))) return false;
+      if (typeFilter !== 'all' && r.typeName !== typeFilter) return false;
+      return true;
+    });
+  }, [data, statusFilter, typeFilter]);
 
   const handleOpen = (mode: DrawerMode, row?: Category) => {
     setDrawerMode(mode);
@@ -74,47 +94,55 @@ export default function KategoriPage() {
   const handleChange = (name: string, value: unknown) => {
     setValues((prev) => {
       const next = { ...prev, [name]: value };
-      if (name === 'type') next.typeId = typeToId(String(value));
+      if (name === 'typeName') next.typeId = typeToId(String(value));
       return next;
     });
   };
 
   const handleSave = async () => {
     setSaving(true);
-    await new Promise((r) => setTimeout(r, 600));
-    const now = fmtNow();
-    if (drawerMode === 'add') {
-      const newCat: Category = {
-        categoryId: Number(values.categoryId),
-        esbId: Number(values.esbId),
-        code: String(values.code ?? ''),
-        name: String(values.name ?? ''),
-        type: String(values.type ?? 'Inventory'),
-        typeId: Number(values.typeId ?? 0),
-        flagActive: Boolean(values.flagActive),
-        notes: String(values.notes ?? ''),
-        syncedAt: String(values.syncedAt ?? now),
-        updatedAt: now,
-      };
-      setData((prev) => [...prev, newCat].sort((a, b) => a.name.localeCompare(b.name)));
-      showSnack('Category added successfully');
-    } else if (drawerMode === 'edit' && selected) {
-      const updated: Category = { ...selected, ...values, updatedAt: now } as Category;
-      setData((prev) => prev.map((d) => d.categoryId === updated.categoryId ? updated : d).sort((a, b) => a.name.localeCompare(b.name)));
-      showSnack('Category updated successfully');
+    try {
+      const now = fmtNow();
+      if (drawerMode === 'add') {
+        const newCat: Category = {
+          categoryId: Number(values.categoryId),
+          esbId: Number(values.esbId ?? 0),
+          code: String(values.code ?? ''),
+          name: String(values.name ?? ''),
+          typeName: String(values.typeName ?? 'Beverage') as Category['typeName'],
+          typeId: Number(values.typeId ?? 0),
+          flagActive: Boolean(values.flagActive),
+          notes: String(values.notes ?? ''),
+          syncedAt: fmtNow(),
+          updatedAt: now,
+          parentId: null,
+          isActive: true,
+        };
+        setData((prev) => [...prev, newCat].sort((a, b) => a.name.localeCompare(b.name)));
+        showSnack('Category added successfully');
+      } else if (drawerMode === 'edit' && selected) {
+        const updated: Category = { ...selected, ...values, updatedAt: now } as Category;
+        setData((prev) => prev.map((d) => d.categoryId === updated.categoryId ? updated : d).sort((a, b) => a.name.localeCompare(b.name)));
+        showSnack('Category updated successfully');
+      }
+      setDrawerOpen(false);
+    } catch (err) {
+      showSnack(err instanceof Error ? err.message : 'Failed to save category', 'error');
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
-    setDrawerOpen(false);
   };
 
   const handleDelete = async () => {
     if (!selected) return;
     setSaving(true);
-    await new Promise((r) => setTimeout(r, 500));
-    setData((prev) => prev.filter((d) => d.categoryId !== selected.categoryId));
-    showSnack('Category deleted', 'error');
-    setSaving(false);
-    setDrawerOpen(false);
+    try {
+      setData((prev) => prev.filter((d) => d.categoryId !== selected.categoryId));
+      showSnack('Category deleted', 'error');
+    } finally {
+      setSaving(false);
+      setDrawerOpen(false);
+    }
   };
 
   const columns: TableColumn<Category>[] = useMemo(() => [
@@ -124,7 +152,7 @@ export default function KategoriPage() {
     },
     {
       id: 'esbId', label: 'ESB Id', width: 70, hideOnMobile: true,
-      render: (r) => <Box component="span" sx={{ fontFamily: 'monospace', fontSize: 12, color: 'text.secondary' }}>{r.esbId}</Box>,
+      render: (r) => <Box component="span" sx={{ fontFamily: 'monospace', fontSize: 12, color: 'text.secondary' }}>{r.esbId ?? 0}</Box>,
     },
     {
       id: 'name', label: 'Name', sortable: true,
@@ -135,18 +163,18 @@ export default function KategoriPage() {
       render: (r) => <Box component="span" sx={{ fontFamily: 'monospace', fontSize: 12, fontWeight: 600 }}>{r.code || '-'}</Box>,
     },
     {
-      id: 'type', label: 'Type', align: 'center', sortable: true,
+      id: 'typeName', label: 'Type', align: 'center', sortable: true,
       render: (r) => {
-        const bg = r.type === 'Inventory' ? 'primary.lighter' : r.type === 'Non Inventory' ? 'secondary.lighter' : 'info.lighter';
-        const fg = r.type === 'Inventory' ? 'primary.dark' : r.type === 'Non Inventory' ? 'secondary.dark' : 'info.dark';
-        return <Box component="span" sx={{ px: 1.5, py: 0.5, borderRadius: 1, fontWeight: 600, fontSize: 12, bgcolor: bg, color: fg }}>{r.type}</Box>;
+        const bg = r.typeName === 'Beverage' ? 'primary.lighter' : r.typeName === 'Food' ? 'secondary.lighter' : r.typeName === 'Ingredient' ? 'info.lighter' : 'grey.200';
+        const fg = r.typeName === 'Beverage' ? 'primary.dark' : r.typeName === 'Food' ? 'secondary.dark' : r.typeName === 'Ingredient' ? 'info.dark' : 'text.primary';
+        return <Box component="span" sx={{ px: 1.5, py: 0.5, borderRadius: 1, fontWeight: 600, fontSize: 12, bgcolor: bg, color: fg }}>{r.typeName}</Box>;
       },
     },
     {
       id: 'flagActive', label: 'Status', align: 'center', sortable: true,
       render: (r) => (
-        <Box component="span" sx={{ px: 1.5, py: 0.5, borderRadius: 1, fontWeight: 600, fontSize: 12, bgcolor: r.flagActive ? 'success.lighter' : 'grey.200', color: r.flagActive ? 'success.dark' : 'text.secondary' }}>
-          {r.flagActive ? 'Active' : 'Inactive'}
+        <Box component="span" sx={{ px: 1.5, py: 0.5, borderRadius: 1, fontWeight: 600, fontSize: 12, bgcolor: (r.flagActive ?? r.isActive) ? 'success.lighter' : 'grey.200', color: (r.flagActive ?? r.isActive) ? 'success.dark' : 'text.secondary' }}>
+          {(r.flagActive ?? r.isActive) ? 'Active' : 'Inactive'}
         </Box>
       ),
     },
@@ -161,18 +189,60 @@ export default function KategoriPage() {
     { label: 'Delete', icon: <DeleteIcon fontSize="small" />, color: 'error' as const, onClick: (r: unknown) => handleOpen('delete', r as Category), tooltip: 'Delete category' },
   ];
 
+  if (loading) {
+    return (
+      <Box>
+        <PageHeader title="Category" subtitle="Product category master data — main categories and type grouping" breadcrumbs={['Data', 'Category']} />
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}>
+          <CircularProgress />
+        </Box>
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box>
+        <PageHeader title="Category" subtitle="Product category master data — main categories and type grouping" breadcrumbs={['Data', 'Category']} />
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}>
+          <Alert severity="error" variant="filled">{error}</Alert>
+        </Box>
+      </Box>
+    );
+  }
+
   return (
     <Box>
       <PageHeader title="Category" subtitle="Product category master data — main categories and type grouping" breadcrumbs={['Data', 'Category']} />
+      <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap', alignItems: 'center' }}>
+        <FormControl size="small" sx={{ minWidth: 140 }}>
+          <InputLabel>Status</InputLabel>
+          <Select label="Status" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as 'all' | 'active' | 'inactive')}>
+            <MenuItem value="all">All</MenuItem>
+            <MenuItem value="active">Active</MenuItem>
+            <MenuItem value="inactive">Inactive</MenuItem>
+          </Select>
+        </FormControl>
+        <FormControl size="small" sx={{ minWidth: 130 }}>
+          <InputLabel>Type</InputLabel>
+          <Select label="Type" value={typeFilter} onChange={(e) => setTypeFilter(e.target.value as 'all' | 'Beverage' | 'Food' | 'Ingredient' | 'Other')}>
+            <MenuItem value="all">All Types</MenuItem>
+            <MenuItem value="Beverage">Beverage</MenuItem>
+            <MenuItem value="Food">Food</MenuItem>
+            <MenuItem value="Ingredient">Ingredient</MenuItem>
+            <MenuItem value="Other">Other</MenuItem>
+          </Select>
+        </FormControl>
+      </Box>
       <ModernTable
         title="Categories"
-        subtitle={`${data.length} total categories`}
+        subtitle={`${filtered.length} of ${data.length} categories`}
         columns={columns}
-        data={data}
+        data={filtered}
         keyField="categoryId"
         actions={actions}
         searchPlaceholder="Search by name, code, or notes..."
-        searchFields={['name', 'code', 'type', 'notes']}
+        searchFields={['name', 'code', 'typeName', 'notes']}
         pagination={true}
         defaultRowsPerPage={50}
         rowsPerPageOptions={[10, 25, 50, 100]}

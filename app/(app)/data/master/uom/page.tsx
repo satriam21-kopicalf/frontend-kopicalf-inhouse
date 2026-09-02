@@ -1,29 +1,19 @@
 'use client';
 
-import { useState } from 'react';
-import { Box, Snackbar, Alert } from '@mui/material';
+import { useState, useEffect } from 'react';
+import { Box, Snackbar, Alert, CircularProgress, Chip, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import { useMemo } from 'react';
 import PageHeader from '@/components/PageHeader';
 import ModernTable from '@/components/ModernTable';
 import DataDrawer, { DrawerField, DrawerMode } from '@/components/DataDrawer';
 import { TableColumn } from '@/components/ModernTable';
-import { MOCK_UOMS, Uom } from '@/lib/mockData';
-
-const CATEGORY_OPTIONS = [
-  { value: 'Weight', label: 'Weight' },
-  { value: 'Volume', label: 'Volume' },
-  { value: 'Unit', label: 'Unit' },
-  { value: 'Serving', label: 'Serving' },
-];
+import { Uom } from '@/lib/api/client';
+import { apiClient } from '@/lib/api/client';
 
 const FIELDS: DrawerField[] = [
   { name: 'uomCode', label: 'UOM Code', required: true },
   { name: 'uomName', label: 'Unit Name', required: true },
-  { name: 'category', label: 'Category', type: 'select', options: CATEGORY_OPTIONS, required: true },
-  { name: 'baseUnit', label: 'Base Unit', required: true },
-  { name: 'conversionFactor', label: 'Conversion Factor', type: 'number', required: true },
-  { name: 'description', label: 'Description', gridSpan: 2 },
   { name: 'isActive', label: 'Active', type: 'switch' },
 ];
 
@@ -33,31 +23,20 @@ const fmtNow = () => {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
 };
 
-const fmtFactor = (n: number) => (n >= 1000 ? n.toLocaleString('id-ID') : String(n));
-
 const emptyValues = (): Record<string, unknown> => ({
   uomCode: '',
   uomName: '',
-  category: 'Unit',
-  baseUnit: '',
-  conversionFactor: 1,
-  description: '',
   isActive: true,
   syncedAt: fmtNow(),
   updatedAt: fmtNow(),
 });
 
-const catColors: Record<string, { bg: string; color: string }> = {
-  Weight: { bg: 'primary.lighter', color: 'primary.dark' },
-  Volume: { bg: 'secondary.lighter', color: 'secondary.dark' },
-  Unit: { bg: 'grey.200', color: 'text.primary' },
-  Serving: { bg: 'info.lighter', color: 'info.dark' },
-};
-
 export default function UomPage() {
-  const [data, setData] = useState<Uom[]>(() =>
-    [...MOCK_UOMS].sort((a, b) => a.uomName.localeCompare(b.uomName))
-  );
+  const [data, setData] = useState<Uom[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
+  const [codeFilter, setCodeFilter] = useState<string>('all');
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerMode, setDrawerMode] = useState<DrawerMode>(null);
@@ -65,6 +44,28 @@ export default function UomPage() {
   const [values, setValues] = useState<Record<string, unknown>>(emptyValues());
   const [saving, setSaving] = useState(false);
   const [snack, setSnack] = useState({ open: false, msg: '', sev: 'success' as 'success' | 'error' });
+
+  useEffect(() => {
+    apiClient.getUOMs()
+      .then((uoms) => setData(uoms.sort((a, b) => a.uomName.localeCompare(b.uomName))))
+      .catch((err) => setError(err instanceof Error ? err.message : 'Failed to load UOMs'))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const codeOptions = useMemo(() => {
+    const seen = new Set<string>();
+    return data.filter(r => { if (!r.uomCode) return false; if (seen.has(r.uomCode)) return false; seen.add(r.uomCode); return true; })
+      .map(r => ({ value: r.uomCode!, label: r.uomCode! }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+  }, [data]);
+
+  const filtered = useMemo(() => {
+    return data.filter(r => {
+      if (statusFilter !== 'all' && ((r.isActive ?? true) !== (statusFilter === 'active'))) return false;
+      if (codeFilter !== 'all' && r.uomCode !== codeFilter) return false;
+      return true;
+    });
+  }, [data, statusFilter, codeFilter]);
 
   const showSnack = (msg: string, sev: 'success' | 'error' = 'success') => {
     setSnack({ open: true, msg, sev });
@@ -76,7 +77,7 @@ export default function UomPage() {
     if (mode === 'add') {
       setValues({ ...emptyValues(), uomID: data.length ? Math.max(...data.map((d) => d.uomID)) + 1 : 1 });
     } else if (row) {
-      setValues({ ...row });
+      setValues({ uomCode: row.uomCode, uomName: row.uomName, isActive: row.isActive, uomID: row.uomID, syncedAt: row.syncedAt, updatedAt: row.updatedAt });
     }
     setDrawerOpen(true);
   };
@@ -87,40 +88,46 @@ export default function UomPage() {
 
   const handleSave = async () => {
     setSaving(true);
-    await new Promise((r) => setTimeout(r, 600));
-    const now = fmtNow();
-    if (drawerMode === 'add') {
-      const newUom: Uom = {
-        uomID: Number(values.uomID),
-        uomCode: String(values.uomCode ?? ''),
-        uomName: String(values.uomName ?? ''),
-        category: values.category as Uom['category'],
-        baseUnit: String(values.baseUnit ?? ''),
-        conversionFactor: Number(values.conversionFactor ?? 1),
-        description: String(values.description ?? ''),
-        isActive: Boolean(values.isActive),
-        syncedAt: fmtNow(),
-        updatedAt: now,
-      };
-      setData((prev) => [...prev, newUom].sort((a, b) => a.uomName.localeCompare(b.uomName)));
-      showSnack('UOM added successfully');
-    } else if (drawerMode === 'edit' && selected) {
-      const updated: Uom = { ...selected, ...values, updatedAt: now } as Uom;
-      setData((prev) => prev.map((d) => d.uomID === updated.uomID ? updated : d).sort((a, b) => a.uomName.localeCompare(b.uomName)));
-      showSnack('UOM updated successfully');
+    try {
+      const now = fmtNow();
+      if (drawerMode === 'add') {
+        const newUom: Uom = {
+          uomID: Number(values.uomID),
+          uomCode: String(values.uomCode ?? ''),
+          uomName: String(values.uomName ?? ''),
+          category: 'Unit',
+          baseUnit: String(values.uomCode ?? ''),
+          conversionFactor: 1,
+          description: '',
+          isActive: Boolean(values.isActive),
+          syncedAt: fmtNow(),
+          updatedAt: now,
+        };
+        setData((prev) => [...prev, newUom].sort((a, b) => a.uomName.localeCompare(b.uomName)));
+        showSnack('UOM added successfully');
+      } else if (drawerMode === 'edit' && selected) {
+        const updated: Uom = { ...selected, uomCode: String(values.uomCode ?? ''), uomName: String(values.uomName ?? ''), isActive: Boolean(values.isActive), updatedAt: now };
+        setData((prev) => prev.map((d) => d.uomID === updated.uomID ? updated : d).sort((a, b) => a.uomName.localeCompare(b.uomName)));
+        showSnack('UOM updated successfully');
+      }
+      setDrawerOpen(false);
+    } catch (err) {
+      showSnack(err instanceof Error ? err.message : 'Failed to save UOM', 'error');
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
-    setDrawerOpen(false);
   };
 
   const handleDelete = async () => {
     if (!selected) return;
     setSaving(true);
-    await new Promise((r) => setTimeout(r, 500));
-    setData((prev) => prev.filter((d) => d.uomID !== selected.uomID));
-    showSnack('UOM deleted', 'error');
-    setSaving(false);
-    setDrawerOpen(false);
+    try {
+      setData((prev) => prev.filter((d) => d.uomID !== selected.uomID));
+      showSnack('UOM deleted', 'error');
+    } finally {
+      setSaving(false);
+      setDrawerOpen(false);
+    }
   };
 
   const columns: TableColumn<Uom>[] = useMemo(() => [
@@ -142,27 +149,14 @@ export default function UomPage() {
       ),
     },
     {
-      id: 'category', label: 'Category', align: 'center', sortable: true,
-      render: (r) => {
-        const colors = catColors[r.category] || catColors['Unit'];
-        return <Box component="span" sx={{ px: 1.5, py: 0.5, borderRadius: 1, fontWeight: 600, fontSize: 12, bgcolor: colors.bg, color: colors.color }}>{r.category}</Box>;
-      },
-    },
-    {
-      id: 'conversionFactor', label: 'Conversion', align: 'center',
+      id: 'isActive', label: 'Status', align: 'center',
       render: (r) => (
-        <Box component="span" sx={{ px: 1.5, py: 0.5, borderRadius: 1, fontWeight: 600, fontSize: 12, bgcolor: r.conversionFactor === 1 ? 'primary.main' : 'grey.200', color: r.conversionFactor === 1 ? 'primary.contrastText' : 'text.primary' }}>
-          {r.conversionFactor === 1 ? 'Base' : `×${fmtFactor(r.conversionFactor)}`}
-        </Box>
+        <Chip
+          label={(r.isActive ?? true) ? 'Active' : 'Inactive'}
+          size="small"
+          sx={{ fontWeight: 600, fontSize: 11, bgcolor: (r.isActive ?? true) ? 'success.lighter' : 'grey.200', color: (r.isActive ?? true) ? 'success.dark' : 'text.secondary' }}
+        />
       ),
-    },
-    {
-      id: 'baseUnit', label: 'Base Unit', align: 'center', hideOnMobile: true,
-      render: (r) => <Box component="span" sx={{ fontFamily: 'monospace', fontSize: 12 }}>{r.baseUnit}</Box>,
-    },
-    {
-      id: 'description', label: 'Description', hideOnMobile: true,
-      render: (r) => <Box sx={{ fontSize: 12, color: 'text.secondary', maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.description}</Box>,
     },
   ], []);
 
@@ -171,18 +165,58 @@ export default function UomPage() {
     { label: 'Delete', icon: <DeleteIcon fontSize="small" />, color: 'error' as const, onClick: (r: unknown) => handleOpen('delete', r as Uom), tooltip: 'Delete UOM' },
   ];
 
+  if (loading) {
+    return (
+      <Box>
+        <PageHeader title="Unit of Measure" subtitle="Unit master data — UoM codes and names from database" breadcrumbs={['Data', 'UoM']} />
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}>
+          <CircularProgress />
+        </Box>
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box>
+        <PageHeader title="Unit of Measure" subtitle="Unit master data — UoM codes and names from database" breadcrumbs={['Data', 'UoM']} />
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}>
+          <Alert severity="error" variant="filled">{error}</Alert>
+        </Box>
+      </Box>
+    );
+  }
+
   return (
     <Box>
-      <PageHeader title="Unit of Measure" subtitle="Unit master data — grouped by category with conversion to base unit" breadcrumbs={['Data', 'UoM']} />
+      <PageHeader title="Unit of Measure" subtitle="Unit master data — UoM codes and names from database" breadcrumbs={['Data', 'UoM']} />
+      {/* Filter Bar */}
+      <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap', alignItems: 'center' }}>
+        <FormControl size="small" sx={{ minWidth: 140 }}>
+          <InputLabel>Status</InputLabel>
+          <Select label="Status" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as 'all' | 'active' | 'inactive')}>
+            <MenuItem value="all">All</MenuItem>
+            <MenuItem value="active">Active</MenuItem>
+            <MenuItem value="inactive">Inactive</MenuItem>
+          </Select>
+        </FormControl>
+        <FormControl size="small" sx={{ minWidth: 130 }}>
+          <InputLabel>Code</InputLabel>
+          <Select label="Code" value={codeFilter} onChange={(e) => setCodeFilter(e.target.value)}>
+            <MenuItem value="all">All Codes</MenuItem>
+            {codeOptions.map((o) => <MenuItem key={o.value} value={o.value}>{o.label}</MenuItem>)}
+          </Select>
+        </FormControl>
+      </Box>
       <ModernTable
         title="Units of Measure"
-        subtitle={`${data.length} total units`}
+        subtitle={`${filtered.length} of ${data.length} records`}
         columns={columns}
-        data={data}
+        data={filtered}
         keyField="uomID"
         actions={actions}
-        searchPlaceholder="Search by code, name, or description..."
-        searchFields={['uomCode', 'uomName', 'category', 'baseUnit', 'description']}
+        searchPlaceholder="Search by code or name..."
+        searchFields={['uomCode', 'uomName']}
         pagination={true}
         defaultRowsPerPage={50}
         rowsPerPageOptions={[10, 25, 50, 100]}
@@ -204,10 +238,10 @@ export default function UomPage() {
         saving={saving}
         deleteLoading={saving}
         saveLabel={drawerMode === 'add' ? 'Add UOM' : 'Save Changes'}
-        width={560}
+        width={480}
       />
       <Snackbar open={snack.open} autoHideDuration={3000} onClose={() => setSnack((s) => ({ ...s, open: false }))} anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}>
-        <Alert severity={snack.sev} variant="filled" onClose={() => setSnack((s) => ({ ...s, open: false }))}>
+        <Alert severity={snack.sev} variant="filled" onClose={() => setSnack((sn) => ({ ...sn, open: false }))}>
           {snack.msg}
         </Alert>
       </Snackbar>

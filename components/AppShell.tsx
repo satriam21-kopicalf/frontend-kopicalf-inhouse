@@ -334,7 +334,7 @@ function DesktopSidebar({
 
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => ({
     Data: pathname.startsWith('/data'),
-    Master: pathname.startsWith('/data/master/') || pathname.startsWith('/data/branch') || pathname.startsWith('/data/produk') || pathname.startsWith('/data/kategori') || pathname.startsWith('/data/sub-kategori') || pathname.startsWith('/data/unit') || pathname.startsWith('/data/pricelist') || pathname.startsWith('/data/bom') || pathname.startsWith('/data/uom') || pathname.startsWith('/data/calculator') || pathname.startsWith('/data/master/staff'),
+    Master: pathname.startsWith('/data/master/') || pathname.startsWith('/data/branch') || pathname.startsWith('/data/produk') || pathname.startsWith('/data/kategori') || pathname.startsWith('/data/sub-kategori') || pathname.startsWith('/data/unit') || pathname.startsWith('/data/pricelist') || pathname.startsWith('/data/bom') || pathname.startsWith('/data/uom') || pathname.startsWith('/data/calculator') || pathname.startsWith('/data/master/account-access'),
     Reporting: pathname.startsWith('/data/reporting'),
     'Supply Chain & Cost Control': pathname.startsWith('/scc'),
   }));
@@ -343,7 +343,7 @@ function DesktopSidebar({
     setOpenGroups((prev) => ({
       ...prev,
       Data: pathname.startsWith('/data'),
-      Master: pathname.startsWith('/data/master/') || pathname.startsWith('/data/branch') || pathname.startsWith('/data/produk') || pathname.startsWith('/data/kategori') || pathname.startsWith('/data/sub-kategori') || pathname.startsWith('/data/unit') || pathname.startsWith('/data/pricelist') || pathname.startsWith('/data/bom') || pathname.startsWith('/data/uom') || pathname.startsWith('/data/calculator') || pathname.startsWith('/data/master/staff'),
+      Master: pathname.startsWith('/data/master/') || pathname.startsWith('/data/branch') || pathname.startsWith('/data/produk') || pathname.startsWith('/data/kategori') || pathname.startsWith('/data/sub-kategori') || pathname.startsWith('/data/unit') || pathname.startsWith('/data/pricelist') || pathname.startsWith('/data/bom') || pathname.startsWith('/data/uom') || pathname.startsWith('/data/calculator') || pathname.startsWith('/data/master/account-access'),
       Reporting: pathname.startsWith('/data/reporting'),
       'Supply Chain & Cost Control': pathname.startsWith('/scc'),
     }));
@@ -531,7 +531,7 @@ function MobileSidebar({ onNavigate }: { onNavigate?: () => void }) {
 
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => ({
     Data: pathname.startsWith('/data'),
-    Master: pathname.startsWith('/data/master/') || pathname.startsWith('/data/branch') || pathname.startsWith('/data/produk') || pathname.startsWith('/data/kategori') || pathname.startsWith('/data/sub-kategori') || pathname.startsWith('/data/unit') || pathname.startsWith('/data/pricelist') || pathname.startsWith('/data/bom') || pathname.startsWith('/data/uom') || pathname.startsWith('/data/calculator') || pathname.startsWith('/data/master/staff'),
+    Master: pathname.startsWith('/data/master/') || pathname.startsWith('/data/branch') || pathname.startsWith('/data/produk') || pathname.startsWith('/data/kategori') || pathname.startsWith('/data/sub-kategori') || pathname.startsWith('/data/unit') || pathname.startsWith('/data/pricelist') || pathname.startsWith('/data/bom') || pathname.startsWith('/data/uom') || pathname.startsWith('/data/calculator') || pathname.startsWith('/data/master/account-access'),
     Reporting: pathname.startsWith('/data/reporting'),
     'Supply Chain & Cost Control': pathname.startsWith('/scc'),
   }));
@@ -540,7 +540,7 @@ function MobileSidebar({ onNavigate }: { onNavigate?: () => void }) {
     setOpenGroups((prev) => ({
       ...prev,
       Data: pathname.startsWith('/data'),
-      Master: pathname.startsWith('/data/master/') || pathname.startsWith('/data/branch') || pathname.startsWith('/data/produk') || pathname.startsWith('/data/kategori') || pathname.startsWith('/data/sub-kategori') || pathname.startsWith('/data/unit') || pathname.startsWith('/data/pricelist') || pathname.startsWith('/data/bom') || pathname.startsWith('/data/uom') || pathname.startsWith('/data/calculator') || pathname.startsWith('/data/master/staff'),
+      Master: pathname.startsWith('/data/master/') || pathname.startsWith('/data/branch') || pathname.startsWith('/data/produk') || pathname.startsWith('/data/kategori') || pathname.startsWith('/data/sub-kategori') || pathname.startsWith('/data/unit') || pathname.startsWith('/data/pricelist') || pathname.startsWith('/data/bom') || pathname.startsWith('/data/uom') || pathname.startsWith('/data/calculator') || pathname.startsWith('/data/master/account-access'),
       Reporting: pathname.startsWith('/data/reporting'),
       'Supply Chain & Cost Control': pathname.startsWith('/scc'),
     }));

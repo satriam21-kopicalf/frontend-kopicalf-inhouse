@@ -5,21 +5,22 @@ import {
   Box, Typography, Table, TableBody, TableCell,
   TableContainer, TableHead, TableRow, IconButton, Tooltip, Drawer,
   TextField, MenuItem, Snackbar, Alert, Select, FormControl,
-  InputLabel, InputAdornment, Button, Chip, Dialog, DialogTitle,
-  DialogContent, DialogActions, Stack,
+  InputLabel, InputAdornment, Button, Chip,
 } from '@mui/material';
 import {
   Visibility as VisibilityIcon,
   Close as CloseIcon,
   Search as SearchIcon,
-  FilterList as FilterListIcon,
-  DateRange as DateRangeIcon,
-  InfoOutlined as InfoIcon,
+  Add as AddIcon,
   Tune as TuneIcon,
+  InfoOutlined as InfoIcon,
 } from '@mui/icons-material';
 import PageHeader from '@/components/PageHeader';
 import DataDrawer from '@/components/DataDrawer';
+import WasteForm from '@/components/WasteForm';
 import { MOCK_WASTE_RECORDS, MOCK_WASTE_DETAILS, WasteRecord, WasteStatus } from '@/lib/mockData';
+import { useCreateWaste } from '@/lib/hooks/stock-opname';
+import type { WasteFormValues } from '@/components/WasteForm';
 
 const fmtCurr = (n: number) =>
   new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(n);
@@ -32,6 +33,10 @@ const STATUS_COLORS: Record<WasteStatus, { bg: string; color: string; label: str
 };
 
 export default function WastePage() {
+  // Form drawer state
+  const [formDrawerOpen, setFormDrawerOpen] = useState(false);
+  const createMutation = useCreateWaste();
+
   const [records] = useState<WasteRecord[]>(
     () => [...MOCK_WASTE_RECORDS].sort((a, b) => b.wasteId - a.wasteId)
   );
@@ -123,6 +128,22 @@ export default function WastePage() {
     setToast({ open: true, msg: 'Waste record deleted successfully.', sev: 'error' });
   };
 
+  const handleCreateWaste = async (data: WasteFormValues) => {
+    await createMutation.mutateAsync({
+      branchId: data.branchId,
+      wasteDate: data.wasteDate,
+      details: data.details.map((d) => ({
+        productCode: d.productCode,
+        qty: d.qty,
+        reason: d.reason,
+        notes: d.notes,
+      })),
+      notes: data.notes,
+    });
+    setFormDrawerOpen(false);
+    setToast({ open: true, msg: 'Waste saved successfully!', sev: 'success' });
+  };
+
   const clearDateFilter = () => { setDateStart(''); setDateEnd(''); setPage(0); };
 
   const paginated = filtered.slice(page * ROWS_PER_PAGE, page * ROWS_PER_PAGE + ROWS_PER_PAGE);
@@ -172,6 +193,17 @@ export default function WastePage() {
         title="Waste Management"
         subtitle="Track and manage waste records across all branches"
         breadcrumbs={['Supply Chain & Cost Control', 'Waste']}
+        actions={
+          <Button
+            variant="contained"
+            color="error"
+            startIcon={<AddIcon />}
+            onClick={() => setFormDrawerOpen(true)}
+            size="small"
+          >
+            New Waste
+          </Button>
+        }
       />
 
       {/* ─── KPI Strip ─── */}
@@ -253,7 +285,7 @@ export default function WastePage() {
 
           {/* Quick date filter */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, ml: 'auto' }}>
-            <DateRangeIcon sx={{ fontSize: 15, color: 'text.secondary' }} />
+            <SearchIcon sx={{ fontSize: 15, color: 'text.secondary' }} />
             <TextField
               size="small"
               type="date"
@@ -276,7 +308,7 @@ export default function WastePage() {
             {(dateStart || dateEnd) && (
               <Tooltip title="Clear date filter">
                 <IconButton size="small" onClick={clearDateFilter}>
-                  <FilterListIcon sx={{ fontSize: 14 }} />
+                  <CloseIcon sx={{ fontSize: 14 }} />
                 </IconButton>
               </Tooltip>
             )}
@@ -491,7 +523,7 @@ export default function WastePage() {
 
         {/* Drawer Content */}
         <Box sx={{ flex: 1, overflowY: 'auto', p: 3 }}>
-          <Stack spacing={2.5}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
             {/* Branch */}
             <FormControl size="small" fullWidth>
               <InputLabel>Branch</InputLabel>
@@ -593,7 +625,7 @@ export default function WastePage() {
                 />
               </Box>
             </Box>
-          </Stack>
+          </Box>
         </Box>
 
         {/* Drawer Actions */}
@@ -762,6 +794,53 @@ export default function WastePage() {
           {toast.msg}
         </Alert>
       </Snackbar>
+
+      {/* Form Drawer */}
+      <Drawer
+        anchor="right"
+        open={formDrawerOpen}
+        onClose={() => setFormDrawerOpen(false)}
+        slotProps={{
+          paper: {
+            sx: {
+              width: { xs: '100vw', sm: 600 },
+              borderRadius: { xs: 0, sm: '16px 0 0 16px' },
+              overflow: 'hidden',
+              display: 'flex',
+              flexDirection: 'column',
+            },
+          },
+          backdrop: { sx: { backdropFilter: 'blur(2px)', backgroundColor: 'rgba(0,0,0,0.4)' } },
+        }}
+      >
+        {/* Drawer Header */}
+        <Box sx={{
+          px: 3, py: 2,
+          borderBottom: '1px solid',
+          borderColor: 'divider',
+          bgcolor: 'error.main',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          flexShrink: 0,
+        }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            <AddIcon sx={{ fontSize: 18, color: 'white' }} />
+            <Typography sx={{ fontWeight: 700, color: 'white', fontSize: 15 }}>
+              New Waste
+            </Typography>
+          </Box>
+          <IconButton size="small" onClick={() => setFormDrawerOpen(false)} sx={{ color: 'white' }}>
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        </Box>
+
+        {/* Drawer Content */}
+        <Box sx={{ flex: 1, overflowY: 'auto', p: 3 }}>
+          <WasteForm
+            onSubmit={handleCreateWaste}
+            onCancel={() => setFormDrawerOpen(false)}
+          />
+        </Box>
+      </Drawer>
     </Box>
   );
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import {
   Box, Card, CardContent, Typography, TextField, IconButton,
   Button, Table, TableBody, TableCell, TableContainer, TableHead,
@@ -11,7 +11,7 @@ import {
   Schema as BomIcon, RestartAlt as ResetIcon,
 } from '@mui/icons-material';
 import PageHeader from '@/components/PageHeader';
-import { MOCK_BOM_DATA, MOCK_BOM_MATERIALS } from '@/lib/mockData';
+import { BOM, apiClient } from '@/lib/api/client';
 
 interface CalcRow {
   id: number;
@@ -25,11 +25,13 @@ interface CalcRow {
 let nextId = 100;
 
 const fmtCurr = (n: number) =>
-  new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(n);
+  new Intl.NumberFormat('en-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(n);
 
 const emptyRow = (): CalcRow => ({ id: nextId++, materialCode: '', name: '', qty: '', unit: '', cost: '' });
 
 export default function CalculatorPage() {
+  const [boms, setBoms] = useState<BOM[]>([]);
+  const [bomLoadError, setBomLoadError] = useState<string | null>(null);
   const [bomId, setBomId] = useState<number | ''>('');
   const [outputQty, setOutputQty] = useState<number | ''>(1);
   const [unitName, setUnitName] = useState('PCS');
@@ -37,25 +39,20 @@ export default function CalculatorPage() {
   const [price, setPrice] = useState<number | ''>(25000);
   const [targetMargin, setTargetMargin] = useState<number | ''>(60);
 
-  const bom = useMemo(() => MOCK_BOM_DATA.find((b) => b.bomId === bomId) ?? null, [bomId]);
+  useEffect(() => {
+    apiClient.getBOMs()
+      .then((data) => setBoms(data.sort((a, b) => a.name.localeCompare(b.name))))
+      .catch(() => setBomLoadError('Failed to load BOMs'));
+  }, []);
+
+  const bom = useMemo(() => boms.find((b) => b.bomId === bomId) ?? null, [boms, bomId]);
 
   const loadBom = (id: number) => {
     setBomId(id);
-    const selected = MOCK_BOM_DATA.find((b) => b.bomId === id);
+    const selected = boms.find((b) => b.bomId === id);
     if (!selected) return;
-    const mats = MOCK_BOM_MATERIALS.filter((m) => m.bomID === id);
-    setRows(
-      mats.map((m) => ({
-        id: nextId++,
-        materialCode: m.materialCode,
-        name: m.materialName,
-        qty: m.qty,
-        unit: m.uomName,
-        cost: m.hpp,
-      }))
-    );
-    setOutputQty(selected.outputQty);
-    setUnitName(selected.uomName);
+    setOutputQty(selected.outputQty ?? 1);
+    setUnitName(selected.uomName ?? 'PCS');
   };
 
   const resetAll = () => {
@@ -138,10 +135,15 @@ export default function CalculatorPage() {
                   },
                 }}
               >
+                {bomLoadError ? (
+                  <Alert severity="warning" sx={{ mb: 2 }}>{bomLoadError}</Alert>
+                ) : boms.length === 0 ? (
+                  <Alert severity="info" sx={{ mb: 2 }}>Loading BOMs...</Alert>
+                ) : null}
                 <MenuItem value="">
                   <em>— Manual (without BOM) —</em>
                 </MenuItem>
-                {MOCK_BOM_DATA.filter((b) => b.flagActive).map((b) => (
+                {boms.filter((b) => b.flagActive).map((b) => (
                   <MenuItem key={b.bomId} value={b.bomId}>
                     {b.code} — {b.name}
                   </MenuItem>
@@ -150,7 +152,7 @@ export default function CalculatorPage() {
 
               {bom && (
                 <Alert severity="info" sx={{ mb: 2 }}>
-                  Loaded from <strong>{bom.name}</strong>. Adjust values below.
+                  Loaded <strong>{bom.code} — {bom.name}</strong>. Enter materials manually below.
                 </Alert>
               )}
 
@@ -303,7 +305,7 @@ export default function CalculatorPage() {
                     </Typography>
                     {margin.pct < 55 && (
                       <Alert severity="warning" sx={{ mt: 1.5 }}>
-                        Margin below 55%
+                        Margin below 55% — review your pricing
                       </Alert>
                     )}
                   </>

@@ -1,21 +1,24 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import {
-  Box, Typography, Table, TableBody, TableCell, TableContainer,
-  TableHead, TableRow, IconButton, Tooltip, Drawer,
+  Box, Typography, IconButton, Drawer,
   Button, TextField, MenuItem,
-  Divider, Snackbar, Alert,
+  Snackbar, Alert, CircularProgress,
+  FormControl, InputLabel, Select,
 } from '@mui/material';
 import { Edit as EditIcon, Delete as DeleteIcon, Save as SaveIcon, Close as CloseIcon } from '@mui/icons-material';
 import PageHeader from '@/components/PageHeader';
 import DataDrawer from '@/components/DataDrawer';
 import ModernTable from '@/components/ModernTable';
 import { TableColumn } from '@/components/ModernTable';
-import { MOCK_BOM_DATA, MOCK_BOM_MATERIALS, BOM_TYPES, BomItem, BomMaterial } from '@/lib/mockData';
+import { BOM } from '@/lib/api/client';
+import { apiClient } from '@/lib/api/client';
 
-const fmtCurr = (n: number) =>
-  new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(n);
+const BOM_TYPES = [
+  { bomTypeId: 1, bomTypeName: 'Standard' },
+  { bomTypeId: 2, bomTypeName: 'Semi Finished' },
+];
 
 const fmtNow = () => {
   const d = new Date();
@@ -26,29 +29,38 @@ const fmtNow = () => {
 const numField = (value: string) => (value === '' ? 0 : Number(value));
 
 export default function BomPage() {
-  const [boms, setBoms] = useState<BomItem[]>(() =>
-    [...MOCK_BOM_DATA].sort((a, b) => a.name.localeCompare(b.name))
-  );
-  const [materials, setMaterials] = useState<BomMaterial[]>(() => [...MOCK_BOM_MATERIALS]);
+  const [boms, setBoms] = useState<BOM[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
+  const [bomTypeFilter, setBomTypeFilter] = useState<number | 'all'>('all');
 
-  const [editing, setEditing] = useState<BomItem | null>(null);
-  const [editMaterials, setEditMaterials] = useState<BomMaterial[]>([]);
+  const [editing, setEditing] = useState<BOM | null>(null);
   const [toast, setToast] = useState({ open: false, msg: '', sev: 'success' as 'success' | 'error' });
 
   // Delete drawer state
-  const [deleting, setDeleting] = useState<BomItem | null>(null);
+  const [deleting, setDeleting] = useState<BOM | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteDrawerOpen, setDeleteDrawerOpen] = useState(false);
 
-  const hppByBom = useMemo(() => {
-    const map = new Map<number, number>();
-    for (const m of materials) {
-      map.set(m.bomID, (map.get(m.bomID) ?? 0) + m.totalCost);
-    }
-    return map;
-  }, [materials]);
+  useEffect(() => {
+    apiClient.getBOMs()
+      .then((bomsData) => {
+        setBoms(bomsData.sort((a, b) => a.name.localeCompare(b.name)));
+      }).catch((err) => {
+        setError(err instanceof Error ? err.message : 'Failed to load BOM data');
+      }).finally(() => setLoading(false));
+  }, []);
 
-  const handleDeleteOpen = (row: BomItem) => {
+  const filtered = useMemo(() => {
+    return boms.filter(r => {
+      if (statusFilter !== 'all' && ((r.flagActive ?? true) !== (statusFilter === 'active'))) return false;
+      if (bomTypeFilter !== 'all' && r.bomTypeId !== bomTypeFilter) return false;
+      return true;
+    });
+  }, [boms, statusFilter, bomTypeFilter]);
+
+  const handleDeleteOpen = (row: BOM) => {
     setDeleting(row);
     setDeleteDrawerOpen(true);
   };
@@ -56,40 +68,26 @@ export default function BomPage() {
   const handleDeleteConfirm = async () => {
     if (!deleting) return;
     setDeleteLoading(true);
-    await new Promise((r) => setTimeout(r, 500));
-    setBoms((prev) => prev.filter((b) => b.bomId !== deleting.bomId));
-    setDeleteLoading(false);
-    setDeleteDrawerOpen(false);
-    setDeleting(null);
-    setToast({ open: true, msg: 'BOM deleted successfully', sev: 'error' });
+    try {
+      setBoms((prev) => prev.filter((b) => b.bomId !== deleting.bomId));
+      setDeleteDrawerOpen(false);
+      setDeleting(null);
+      setToast({ open: true, msg: 'BOM deleted successfully', sev: 'error' });
+    } finally {
+      setDeleteLoading(false);
+    }
   };
 
-  const openEdit = (bom: BomItem) => {
+  const openEdit = (bom: BOM) => {
     setEditing({ ...bom });
-    setEditMaterials(materials.filter((m) => m.bomID === bom.bomId).map((m) => ({ ...m })));
-  };
-
-  const updateMaterial = (idx: number, field: 'qty' | 'hpp', value: string) => {
-    setEditMaterials((prev) =>
-      prev.map((m, i) => {
-        if (i !== idx) return m;
-        const next = { ...m, [field]: numField(value) };
-        next.totalCost = next.qty * next.hpp;
-        return next;
-      })
-    );
   };
 
   const handleSave = () => {
     if (!editing) return;
-    const saved: BomItem = { ...editing, updatedAt: fmtNow() };
+    const saved: BOM = { ...editing, updatedAt: fmtNow() };
     setBoms((prev) => {
       const updated = prev.map((b) => (b.bomId === saved.bomId ? saved : b));
       return updated.sort((a, b) => a.name.localeCompare(b.name));
-    });
-    setMaterials((prev) => {
-      const others = prev.filter((m) => m.bomID !== saved.bomId);
-      return [...others, ...editMaterials];
     });
     setEditing(null);
     setToast({ open: true, msg: 'BOM saved successfully', sev: 'success' });
@@ -108,64 +106,97 @@ export default function BomPage() {
     { name: 'bomTypeName', label: 'Type', type: 'readonly' as const },
   ] : [];
 
-  const columns: TableColumn<BomItem>[] = useMemo(() => [
+  const columns: TableColumn<BOM>[] = useMemo(() => [
     {
       id: 'bomId', label: 'Id', width: 55, hideOnMobile: true,
       render: (r) => <Box component="span" sx={{ fontFamily: 'monospace', fontSize: 12, color: 'text.secondary' }}>{r.bomId}</Box>,
     },
     {
       id: 'code', label: 'Code', width: 100, hideOnMobile: true,
-      render: (r) => <Box component="span" sx={{ fontFamily: 'monospace', fontWeight: 600, fontSize: 12 }}>{r.code}</Box>,
+      render: (r) => <Box component="span" sx={{ fontFamily: 'monospace', fontWeight: 600, fontSize: 12 }}>{r.code ?? '-'}</Box>,
     },
     {
       id: 'name', label: 'BOM Name', sortable: true,
-      render: (r) => (
-        <Box>
-          <Typography variant="body2" sx={{ fontWeight: 500 }}>{r.name}</Typography>
-          <Typography variant="caption" sx={{ color: 'primary.main', fontWeight: 600 }}>
-            HPP: {fmtCurr(hppByBom.get(r.bomId) ?? 0)}
-          </Typography>
-        </Box>
-      ),
+      render: (r) => <Typography variant="body2" sx={{ fontWeight: 500 }}>{r.name}</Typography>,
     },
     {
       id: 'productName', label: 'Product', sortable: true, hideOnMobile: true,
+      render: (r) => <Typography variant="caption">{r.productName ?? '-'}</Typography>,
     },
     {
       id: 'outputQty', label: 'Output', align: 'center', hideOnMobile: true,
-      render: (r) => <Box sx={{ fontWeight: 600, fontSize: 14 }}>{r.outputQty} {r.uomName}</Box>,
+      render: (r) => <Box sx={{ fontWeight: 600, fontSize: 14 }}>{r.outputQty ?? 1} {r.uomName ?? ''}</Box>,
     },
     {
       id: 'bomTypeName', label: 'Type', align: 'center', sortable: true,
       render: (r) => (
-        <Box component="span" sx={{ px: 1.5, py: 0.5, borderRadius: 1, fontWeight: 600, fontSize: 12, bgcolor: r.bomTypeId === 1 ? 'primary.lighter' : 'secondary.lighter', color: r.bomTypeId === 1 ? 'primary.dark' : 'secondary.dark' }}>
-          {r.bomTypeName}
+        <Box component="span" sx={{ px: 1.5, py: 0.5, borderRadius: 1, fontWeight: 600, fontSize: 12, bgcolor: (r.bomTypeId ?? 1) === 1 ? 'primary.lighter' : 'secondary.lighter', color: (r.bomTypeId ?? 1) === 1 ? 'primary.dark' : 'secondary.dark' }}>
+          {r.bomTypeName ?? 'Standard'}
         </Box>
       ),
     },
     {
       id: 'flagActive', label: 'Status', align: 'center', sortable: true,
       render: (r) => (
-        <Box component="span" sx={{ px: 1.5, py: 0.5, borderRadius: 1, fontWeight: 600, fontSize: 12, bgcolor: r.flagActive ? 'success.lighter' : 'grey.200', color: r.flagActive ? 'success.dark' : 'text.secondary' }}>
-          {r.flagActive ? 'Active' : 'Inactive'}
+        <Box component="span" sx={{ px: 1.5, py: 0.5, borderRadius: 1, fontWeight: 600, fontSize: 12, bgcolor: (r.flagActive ?? true) ? 'success.lighter' : 'grey.200', color: (r.flagActive ?? true) ? 'success.dark' : 'text.secondary' }}>
+          {(r.flagActive ?? true) ? 'Active' : 'Inactive'}
         </Box>
       ),
     },
-  ], [hppByBom]);
+  ], []);
 
   const actions = [
-    { label: 'Edit', icon: <EditIcon fontSize="small" />, color: 'primary' as const, onClick: (r: unknown) => openEdit(r as BomItem), tooltip: 'Edit BOM' },
-    { label: 'Delete', icon: <DeleteIcon fontSize="small" />, color: 'error' as const, onClick: (r: unknown) => handleDeleteOpen(r as BomItem), tooltip: 'Delete BOM' },
+    { label: 'Edit', icon: <EditIcon fontSize="small" />, color: 'primary' as const, onClick: (r: unknown) => openEdit(r as BOM), tooltip: 'Edit BOM' },
+    { label: 'Delete', icon: <DeleteIcon fontSize="small" />, color: 'error' as const, onClick: (r: unknown) => handleDeleteOpen(r as BOM), tooltip: 'Delete BOM' },
   ];
+
+  if (loading) {
+    return (
+      <Box>
+        <PageHeader title="Bill of Material" subtitle="Recipe master data — BOM with material composition and HPP calculation" breadcrumbs={['Data', 'BOM']} />
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}>
+          <CircularProgress />
+        </Box>
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box>
+        <PageHeader title="Bill of Material" subtitle="Recipe master data — BOM with material composition and HPP calculation" breadcrumbs={['Data', 'BOM']} />
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}>
+          <Alert severity="error" variant="filled">{error}</Alert>
+        </Box>
+      </Box>
+    );
+  }
 
   return (
     <Box>
       <PageHeader title="Bill of Material" subtitle="Recipe master data — BOM with material composition and HPP calculation" breadcrumbs={['Data', 'BOM']} />
+      <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap', alignItems: 'center' }}>
+        <FormControl size="small" sx={{ minWidth: 140 }}>
+          <InputLabel>Status</InputLabel>
+          <Select label="Status" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as 'all' | 'active' | 'inactive')}>
+            <MenuItem value="all">All</MenuItem>
+            <MenuItem value="active">Active</MenuItem>
+            <MenuItem value="inactive">Inactive</MenuItem>
+          </Select>
+        </FormControl>
+        <FormControl size="small" sx={{ minWidth: 160 }}>
+          <InputLabel>BOM Type</InputLabel>
+          <Select label="BOM Type" value={bomTypeFilter} onChange={(e) => setBomTypeFilter(e.target.value as number | 'all')}>
+            <MenuItem value="all">All Types</MenuItem>
+            {BOM_TYPES.map((t) => <MenuItem key={t.bomTypeId} value={t.bomTypeId}>{t.bomTypeName}</MenuItem>)}
+          </Select>
+        </FormControl>
+      </Box>
       <ModernTable
         title="BOM Recipes"
-        subtitle={`${boms.length} total recipes`}
+        subtitle={`${filtered.length} of ${boms.length} recipes`}
         columns={columns}
-        data={boms}
+        data={filtered}
         keyField="bomId"
         actions={actions}
         searchPlaceholder="Search by code, name, or product..."
@@ -195,7 +226,7 @@ export default function BomPage() {
         <Box sx={{ px: 3, py: 2, borderBottom: 1, borderColor: 'divider', bgcolor: 'background.paper', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Box>
             <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>Edit BOM — {editing?.name}</Typography>
-            <Typography variant="caption" color="text.secondary">Adjust BOM details and material composition</Typography>
+            <Typography variant="caption" color="text.secondary">BOM materials not yet synced — editing not available.</Typography>
           </Box>
           <IconButton size="small" onClick={() => setEditing(null)}>
             <CloseIcon fontSize="small" />
@@ -210,9 +241,9 @@ export default function BomPage() {
                 <TextField label="Code" size="small" value={editing.code} onChange={(e) => setEditing({ ...editing, code: e.target.value })} />
                 <TextField label="Name" size="small" value={editing.name} onChange={(e) => setEditing({ ...editing, name: e.target.value })} />
                 <TextField label="Product Name" size="small" value={editing.productName} onChange={(e) => setEditing({ ...editing, productName: e.target.value })} />
-                <TextField label="Uom Name" size="small" value={editing.uomName} onChange={(e) => setEditing({ ...editing, uomName: e.target.value })} />
+                <TextField label="UoM Name" size="small" value={editing.uomName} onChange={(e) => setEditing({ ...editing, uomName: e.target.value })} />
                 <TextField label="Output Qty" size="small" type="number" value={editing.outputQty} onChange={(e) => setEditing({ ...editing, outputQty: numField(e.target.value) })} />
-                <TextField select label="Bom Type" size="small" value={editing.bomTypeId} onChange={(e) => setBomType(Number(e.target.value))}>
+                <TextField select label="BOM Type" size="small" value={editing.bomTypeId} onChange={(e) => setBomType(Number(e.target.value))}>
                   {BOM_TYPES.map((t) => <MenuItem key={t.bomTypeId} value={t.bomTypeId}>{t.bomTypeId} — {t.bomTypeName}</MenuItem>)}
                 </TextField>
                 <TextField label="Company Id" size="small" type="number" value={editing.companyId} onChange={(e) => setEditing({ ...editing, companyId: numField(e.target.value) })} />
@@ -226,49 +257,10 @@ export default function BomPage() {
                 </Box>
               </Box>
 
-              <Divider sx={{ my: 2 }} />
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                  Material ({editMaterials.length}) — total:{' '}
-                  <Typography component="span" variant="subtitle2" color="primary.main" sx={{ fontWeight: 700 }}>
-                    {fmtCurr(editMaterials.reduce((s, m) => s + m.totalCost, 0))}
-                  </Typography>
-                </Typography>
-              </Box>
-              <TableContainer sx={{ border: 1, borderColor: 'divider', borderRadius: 2, overflowX: 'auto' }}>
-                <Table size="small">
-                  <TableHead>
-                    <TableRow sx={{ bgcolor: 'grey.100' }}>
-                      <TableCell sx={{ fontWeight: 600, whiteSpace: 'nowrap' }}>Material</TableCell>
-                      <TableCell sx={{ fontWeight: 600, textAlign: 'center', whiteSpace: 'nowrap' }}>Satuan</TableCell>
-                      <TableCell sx={{ fontWeight: 600, whiteSpace: 'nowrap' }}>Qty</TableCell>
-                      <TableCell sx={{ fontWeight: 600, whiteSpace: 'nowrap' }}>HPP/Unit</TableCell>
-                      <TableCell sx={{ fontWeight: 600, textAlign: 'right', whiteSpace: 'nowrap' }}>Total</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {editMaterials.map((m, idx) => (
-                      <TableRow key={m.materialCode} sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
-                        <TableCell>
-                          <Typography variant="body2">{m.materialName}</Typography>
-                          <Typography variant="caption" sx={{ fontFamily: 'monospace', color: 'text.secondary' }}>{m.materialCode}</Typography>
-                        </TableCell>
-                        <TableCell align="center"><Typography variant="caption">{m.uomName}</Typography></TableCell>
-                        <TableCell>
-                          <TextField size="small" type="number" value={m.qty} onChange={(e) => updateMaterial(idx, 'qty', e.target.value)} sx={{ width: 100 }} />
-                        </TableCell>
-                        <TableCell>
-                          <TextField size="small" type="number" value={m.hpp} onChange={(e) => updateMaterial(idx, 'hpp', e.target.value)} sx={{ width: 130 }} />
-                        </TableCell>
-                        <TableCell align="right">
-                          <Typography variant="body2" sx={{ fontWeight: 600 }}>{fmtCurr(m.totalCost)}</Typography>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            </>
+              <Alert severity="info" sx={{ mt: 2 }}>
+                BOM materials not yet synced — composition editing coming soon.
+              </Alert>
+</>
           )}
         </Box>
 

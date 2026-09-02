@@ -20,7 +20,7 @@ const MASTER_ITEMS = [
   { href: '/data/master/bom',          title: 'BOM',            icon: SchemaIcon },
   { href: '/data/master/uom',          title: 'UoM',            icon: StraightenIcon },
   { href: '/data/master/calculator',   title: 'Calculator',      icon: CalculateIcon },
-  { href: '/data/master/staff',        title: 'Staff',           icon: PeopleIcon },
+  { href: '/data/master/account-access', title: 'Account Access', icon: PeopleIcon },
 ];
 
 export default function MasterPage() {
@@ -28,7 +28,7 @@ export default function MasterPage() {
     <Box>
       <PageHeader
         title="Master Data"
-        subtitle="Core reference data — branches, products, categories, units, and staff"
+        subtitle="Core reference data — branches, products, categories, units, and account access"
         breadcrumbs={['Data', 'Master']}
       />
 

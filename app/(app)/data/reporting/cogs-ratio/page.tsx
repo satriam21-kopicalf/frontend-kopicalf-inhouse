@@ -1,24 +1,27 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   Box, Typography, TextField, Table, TableBody, TableCell,
   TableContainer, TableHead, TableRow, Chip, MenuItem, Select,
   InputAdornment, TablePagination, IconButton, Tooltip, Button,
+  CircularProgress, Alert, LinearProgress, Card, CardContent,
+  Grid, Paper
 } from '@mui/material';
 import {
   Search as SearchIcon, TrendingUp as TrendingUpIcon,
   TrendingDown as TrendingDownIcon, TrendingFlat as TrendingFlatIcon,
   Warning as WarningIcon, CheckCircle as CheckCircleIcon,
   Download as DownloadIcon, Refresh as RefreshIcon,
+  CalendarToday as CalendarIcon,
+  Assessment as AssessmentIcon,
+  Inventory as InventoryIcon,
+  DeleteSweep as WasteIcon,
 } from '@mui/icons-material';
 import PageHeader from '@/components/PageHeader';
-import { MOCK_COGS_RATIO_DATA, COGSRatioData } from '@/lib/mockData';
-
-const fmtCurr = (n: number) =>
-  new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(n);
-
-const fmtPct = (n: number) => `${n.toFixed(1)}%`;
+import TrendAnalysis from '@/components/TrendAnalysis';
+import { COGSRatioData, apiClient, formatCurrency, formatPercentage } from '@/lib/api/client';
+import { PeriodOption } from '@/lib/api/client';
 
 const BRANCH_TYPE_OPTIONS = ['OUTLET', 'HUB WH', 'HUB CK'];
 const ROWS_PER_PAGE = 20;
@@ -36,25 +39,129 @@ export default function CogsRatioPage() {
   const [typeFilter, setTypeFilter] = useState('ALL');
   const [flaggedFilter, setFlaggedFilter] = useState<'ALL' | 'FLAGGED'>('ALL');
   const [page, setPage] = useState(0);
+  const [selectedPeriod, setSelectedPeriod] = useState('');
+  const [availablePeriods, setAvailablePeriods] = useState<PeriodOption[]>([]);
+
+  const [data, setData] = useState<COGSRatioData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [exporting, setExporting] = useState(false);
+  const [trendData, setTrendData] = useState<any[]>([]);
+  const [loadingTrends, setLoadingTrends] = useState(false);
+  const [showTrends, setShowTrends] = useState(false);
+
+  const fetchTrendData = async () => {
+    if (!selectedPeriod) return;
+    
+    try {
+      setLoadingTrends(true);
+      const trends = await apiClient.getCOGSTrend(undefined, undefined);
+      setTrendData(trends);
+    } catch (err) {
+      console.error('Error fetching trend data:', err);
+    } finally {
+      setLoadingTrends(false);
+    }
+  };
+
+  const fetchData = async (period?: string) => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const targetPeriod = period || selectedPeriod || new Date().toISOString().slice(0, 7);
+      const response = await apiClient.getCOGSRatio(targetPeriod, typeFilter !== 'ALL' ? typeFilter : undefined);
+      setData(response.data);
+      
+      if (!selectedPeriod) {
+        setSelectedPeriod(targetPeriod);
+      }
+      
+      if (showTrends) {
+        await fetchTrendData();
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch COGS ratio data');
+      console.error('Error fetching COGS ratio:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchPeriods = async () => {
+    try {
+      const periods = await apiClient.getAvailablePeriods();
+      setAvailablePeriods(periods);
+      if (!selectedPeriod && periods.length > 0) {
+        setSelectedPeriod(periods[0].value);
+      }
+    } catch (err) {
+      console.error('Error fetching periods:', err);
+    }
+  };
+
+  useEffect(() => {
+    fetchPeriods();
+  }, []);
+
+  useEffect(() => {
+    if (selectedPeriod) {
+      fetchData(selectedPeriod);
+    }
+  }, [typeFilter, selectedPeriod]);
+
+  const handleRefresh = () => {
+    fetchData();
+  };
+
+  const handleExport = async () => {
+    try {
+      setExporting(true);
+      const csvContent = await apiClient.exportCOGSToCSV(selectedPeriod, typeFilter !== 'ALL' ? typeFilter : undefined);
+      const filename = `cogs-ratio-${selectedPeriod}.csv`;
+      
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      
+      link.setAttribute('href', url);
+      link.setAttribute('download', filename);
+      link.style.visibility = 'hidden';
+      
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to export data');
+      console.error('Error exporting COGS data:', err);
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const handlePeriodChange = (event: any) => {
+    const newPeriod = event.target.value;
+    setSelectedPeriod(newPeriod);
+    setPage(0);
+  };
 
   const filtered = useMemo(() => {
-    let data = MOCK_COGS_RATIO_DATA;
-    if (typeFilter !== 'ALL') {
-      data = data.filter((d) => d.branchType === typeFilter);
-    }
+    let filteredData = data;
     if (flaggedFilter === 'FLAGGED') {
-      data = data.filter((d) => d.flagged);
+      filteredData = filteredData.filter((d) => d.flagged);
     }
     if (search.trim()) {
       const q = search.toLowerCase();
-      data = data.filter(
+      filteredData = filteredData.filter(
         (d) =>
           d.branchName.toLowerCase().includes(q) ||
           d.branchCode.toLowerCase().includes(q)
       );
     }
-    return data;
-  }, [search, typeFilter, flaggedFilter]);
+    return filteredData;
+  }, [data, search, flaggedFilter]);
 
   const paginated = useMemo(
     () => filtered.slice(page * ROWS_PER_PAGE, page * ROWS_PER_PAGE + ROWS_PER_PAGE),
@@ -73,64 +180,249 @@ export default function CogsRatioPage() {
       : 0;
     const totalRevenue = data.reduce((s, d) => s + d.revenue, 0);
     const totalCogs = data.reduce((s, d) => s + d.cogs, 0);
-    return { total, flagged, avgCogs, avgUsage, totalRevenue, totalCogs };
+    const totalMaterialCost = data.reduce((s, d) => s + (d.materialCost || 0), 0);
+    const totalWasteCost = data.reduce((s, d) => s + (d.wasteCost || 0), 0);
+    
+    return { 
+      total, 
+      flagged, 
+      avgCogs, 
+      avgUsage, 
+      totalRevenue, 
+      totalCogs,
+      totalMaterialCost,
+      totalWasteCost
+    };
   }, [filtered]);
 
   const handleChangePage = (_: unknown, newPage: number) => setPage(newPage);
 
+  if (loading && data.length === 0) {
+    return (
+      <Box>
+        <PageHeader
+          title="COGS Ratio Analysis"
+          subtitle="Branch-level COGS and usage ratio analytics with real-time data integration"
+          breadcrumbs={['Data', 'Reporting', 'COGS Ratio']}
+        />
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
+          <CircularProgress />
+        </Box>
+      </Box>
+    );
+  }
+
+  if (error && data.length === 0) {
+    return (
+      <Box>
+        <PageHeader
+          title="COGS Ratio Analysis"
+          subtitle="Branch-level COGS and usage ratio analytics with real-time data integration"
+          breadcrumbs={['Data', 'Reporting', 'COGS Ratio']}
+        />
+        <Alert severity="error" sx={{ mt: 2 }}>
+          {error}
+        </Alert>
+      </Box>
+    );
+  }
+
   return (
     <Box>
       <PageHeader
-        title="COGS Ratio Report"
-        subtitle="Branch-level COGS and usage ratio — consumed from ERP ESB. Data source for dashboard COGS Ratio and Usage Ratio calculations."
+        title="COGS Ratio Analysis"
+        subtitle="Branch-level COGS and usage ratio analytics with real-time data integration"
         breadcrumbs={['Data', 'Reporting', 'COGS Ratio']}
       />
 
-      {/* ─── Summary strip ─── */}
-      <Box
+      {/* Period Selection & Action Bar */}
+      <Paper
+        elevation={0}
         sx={{
-          display: 'flex',
-          gap: 3,
-          px: 2,
-          py: 1.25,
-          borderBottom: '1px solid',
-          borderColor: 'divider',
+          p: 2,
+          mb: 2,
           bgcolor: 'background.paper',
-          mb: 1.5,
-          flexWrap: 'wrap',
-          alignItems: 'center',
+          border: '1px solid',
+          borderColor: 'divider',
         }}
       >
-        <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap', flex: 1 }}>
-          {[
-            { label: 'Total Branches', value: kpis.total },
-            { label: 'Flagged', value: kpis.flagged, color: kpis.flagged > 0 ? 'error.main' : undefined },
-            { label: 'Avg COGS Ratio', value: fmtPct(kpis.avgCogs) },
-            { label: 'Avg Usage Ratio', value: fmtPct(kpis.avgUsage) },
-            { label: 'Total Revenue', value: fmtCurr(kpis.totalRevenue) },
-            { label: 'Total COGS', value: fmtCurr(kpis.totalCogs) },
-          ].map((s) => (
-            <Box key={s.label}>
-              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', lineHeight: 1.2 }}>
-                {s.label}
+        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+          <Box sx={{ flex: '1 1 100%', maxWidth: { xs: '100%', md: '25%' } }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <CalendarIcon sx={{ fontSize: 20, color: 'text.secondary' }} />
+              <Typography variant="body2" sx={{ fontWeight: 600, minWidth: 60 }}>
+                Period:
               </Typography>
-              <Typography
-                variant="body2"
-                sx={{ fontWeight: 700, lineHeight: 1.2, color: (s as { label: string; value: number | string; color?: string }).color as string || 'text.primary' }}
+              <Select
+                size="small"
+                value={selectedPeriod}
+                onChange={handlePeriodChange}
+                sx={{ minWidth: 140 }}
+                disabled={loading}
               >
-                {s.value}
-              </Typography>
+                {availablePeriods.map((period) => (
+                  <MenuItem key={period.value} value={period.value}>
+                    {period.label}
+                  </MenuItem>
+                ))}
+              </Select>
             </Box>
-          ))}
+          </Box>
+
+          <Box sx={{ flex: '1 1 100%', maxWidth: { xs: '100%', md: '75%' } }}>
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1, alignItems: 'center' }}>
+              <Button
+                variant={showTrends ? "contained" : "outlined"}
+                size="small"
+                onClick={() => {
+                  setShowTrends(!showTrends);
+                  if (!showTrends) {
+                    fetchTrendData();
+                  }
+                }}
+                disabled={loadingTrends}
+              >
+                {showTrends ? 'Hide Trends' : 'Show Trends'}
+              </Button>
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={<RefreshIcon />}
+                onClick={handleRefresh}
+                disabled={loading}
+              >
+                Refresh
+              </Button>
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={<DownloadIcon />}
+                onClick={handleExport}
+                disabled={loading || exporting}
+              >
+                {exporting ? 'Exporting...' : 'Export CSV'}
+              </Button>
+            </Box>
+          </Box>
         </Box>
-        <Tooltip title="Export data">
-          <IconButton size="small">
-            <DownloadIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
+      </Paper>
+
+      {/* KPI Cards */}
+      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }, gap: 2, mb: 2 }}>
+        {[
+          { 
+            label: 'Total Branches', 
+            value: kpis.total, 
+            icon: <AssessmentIcon sx={{ fontSize: 24 }} />,
+            color: 'primary.main'
+          },
+          { 
+            label: 'Flagged Branches', 
+            value: kpis.flagged, 
+            icon: <WarningIcon sx={{ fontSize: 24 }} />,
+            color: kpis.flagged > 0 ? 'error.main' : 'success.main'
+          },
+          { 
+            label: 'Avg COGS Ratio', 
+            value: formatPercentage(kpis.avgCogs), 
+            icon: <AssessmentIcon sx={{ fontSize: 24 }} />,
+            color: kpis.avgCogs > 70 ? 'error.main' : kpis.avgCogs > 65 ? 'warning.main' : 'success.main'
+          },
+          { 
+            label: 'Avg Usage Ratio', 
+            value: formatPercentage(kpis.avgUsage), 
+            icon: <InventoryIcon sx={{ fontSize: 24 }} />,
+            color: kpis.avgUsage > 105 ? 'error.main' : kpis.avgUsage > 100 ? 'warning.main' : 'success.main'
+          },
+          { 
+            label: 'Total Revenue', 
+            value: formatCurrency(kpis.totalRevenue), 
+            icon: <AssessmentIcon sx={{ fontSize: 24 }} />,
+            color: 'info.main'
+          },
+          { 
+            label: 'Total COGS', 
+            value: formatCurrency(kpis.totalCogs), 
+            icon: <AssessmentIcon sx={{ fontSize: 24 }} />,
+            color: 'text.primary'
+          },
+          { 
+            label: 'Material Cost', 
+            value: formatCurrency(kpis.totalMaterialCost), 
+            icon: <InventoryIcon sx={{ fontSize: 24 }} />,
+            color: 'success.main'
+          },
+          { 
+            label: 'Waste Cost', 
+            value: formatCurrency(kpis.totalWasteCost), 
+            icon: <WasteIcon sx={{ fontSize: 24 }} />,
+            color: 'error.main'
+          },
+        ].map((kpi) => (
+          <Box key={kpi.label}>
+            <Card 
+              elevation={0} 
+              sx={{ 
+                height: '100%',
+                border: '1px solid',
+                borderColor: 'divider',
+                '&:hover': {
+                  boxShadow: 2,
+                },
+              }}
+            >
+              <CardContent sx={{ p: 1.5 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.5 }}>
+                  <Typography variant="caption" color="text.secondary" sx={{ fontSize: 11 }}>
+                    {kpi.label}
+                  </Typography>
+                  <Box sx={{ color: kpi.color, opacity: 0.7 }}>
+                    {kpi.icon}
+                  </Box>
+                </Box>
+                <Typography 
+                  variant="h6" 
+                  sx={{ 
+                    fontWeight: 700, 
+                    fontSize: '1.1rem',
+                    color: kpi.color 
+                  }}
+                >
+                  {kpi.value}
+                </Typography>
+              </CardContent>
+            </Card>
+          </Box>
+        ))}
       </Box>
 
-      {/* ─── Table ─── */}
+      {/* Trend Analysis Section */}
+      {showTrends && (
+        <Box sx={{ mb: 2 }}>
+          {loadingTrends ? (
+            <Paper elevation={0} sx={{ p: 4, textAlign: 'center', border: '1px solid', borderColor: 'divider' }}>
+              <CircularProgress size={24} />
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                Loading trend analysis...
+              </Typography>
+            </Paper>
+          ) : (
+            <TrendAnalysis data={trendData} currentPeriod={selectedPeriod} />
+          )}
+        </Box>
+      )}
+
+      {loading && data.length > 0 && (
+        <LinearProgress sx={{ height: 2, mb: 2 }} />
+      )}
+
+      {error && !loading && data.length > 0 && (
+        <Alert severity="warning" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
+
+      {/* Data Table */}
       <Box
         sx={{
           border: '1px solid',
@@ -190,20 +482,15 @@ export default function CogsRatioPage() {
             <MenuItem value="FLAGGED">Flagged Only</MenuItem>
           </Select>
           <Chip
-            label={`${filtered.length} rows`}
+            label={`${filtered.length} branches`}
             size="small"
             color="primary"
             variant="outlined"
             sx={{ fontSize: 11 }}
           />
-          <Tooltip title="Refresh">
-            <IconButton size="small">
-              <RefreshIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
         </Box>
 
-        <TableContainer sx={{ maxHeight: 'calc(100vh - 400px)' }}>
+        <TableContainer sx={{ maxHeight: 'calc(100vh - 450px)' }}>
           <Table size="small" stickyHeader>
             <TableHead>
               <TableRow sx={{ bgcolor: 'grey.900' }}>
@@ -217,6 +504,8 @@ export default function CogsRatioPage() {
                   { label: 'Target', minWidth: 80, align: 'center' as const },
                   { label: 'Gap', minWidth: 80, align: 'right' as const },
                   { label: 'Usage Ratio', minWidth: 90, align: 'center' as const },
+                  { label: 'Material Cost', minWidth: 120, align: 'right' as const },
+                  { label: 'Waste Cost', minWidth: 120, align: 'right' as const },
                   { label: 'Flag', minWidth: 70, align: 'center' as const },
                   { label: 'Trend', minWidth: 70, align: 'center' as const },
                   { label: 'Last Updated', minWidth: 110 },
@@ -280,12 +569,12 @@ export default function CogsRatioPage() {
                     </TableCell>
                     <TableCell align="right">
                       <Typography variant="caption" sx={{ fontFamily: 'monospace', fontSize: 12 }}>
-                        {fmtCurr(row.revenue)}
+                        {formatCurrency(row.revenue)}
                       </Typography>
                     </TableCell>
                     <TableCell align="right">
                       <Typography variant="caption" sx={{ fontFamily: 'monospace', fontSize: 12 }}>
-                        {fmtCurr(row.cogs)}
+                        {formatCurrency(row.cogs)}
                       </Typography>
                     </TableCell>
                     <TableCell align="center">
@@ -298,12 +587,12 @@ export default function CogsRatioPage() {
                           color: overTarget ? 'error.main' : 'success.main',
                         }}
                       >
-                        {fmtPct(row.cogsRatio)}
+                        {formatPercentage(row.cogsRatio)}
                       </Typography>
                     </TableCell>
                     <TableCell align="center">
                       <Typography variant="caption" color="text.secondary">
-                        {fmtPct(row.targetCogsRatio)}
+                        {formatPercentage(row.targetCogsRatio)}
                       </Typography>
                     </TableCell>
                     <TableCell align="right">
@@ -316,7 +605,7 @@ export default function CogsRatioPage() {
                           color: row.gap > 0 ? 'error.main' : row.gap < 0 ? 'success.main' : 'text.secondary',
                         }}
                       >
-                        {row.gap > 0 ? '+' : ''}{fmtPct(row.gap)}
+                        {row.gap > 0 ? '+' : ''}{formatPercentage(row.gap)}
                       </Typography>
                     </TableCell>
                     <TableCell align="center">
@@ -329,7 +618,17 @@ export default function CogsRatioPage() {
                           color: row.usageRatio > 105 ? 'error.main' : row.usageRatio > 100 ? 'warning.main' : 'success.main',
                         }}
                       >
-                        {fmtPct(row.usageRatio)}
+                        {formatPercentage(row.usageRatio)}
+                      </Typography>
+                    </TableCell>
+                    <TableCell align="right">
+                      <Typography variant="caption" sx={{ fontFamily: 'monospace', fontSize: 12 }}>
+                        {formatCurrency(row.materialCost || 0)}
+                      </Typography>
+                    </TableCell>
+                    <TableCell align="right">
+                      <Typography variant="caption" sx={{ fontFamily: 'monospace', fontSize: 12, color: 'error.main' }}>
+                        {formatCurrency(row.wasteCost || 0)}
                       </Typography>
                     </TableCell>
                     <TableCell align="center">
@@ -356,7 +655,7 @@ export default function CogsRatioPage() {
               })}
               {paginated.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={12} align="center" sx={{ py: 4 }}>
+                  <TableCell colSpan={14} align="center" sx={{ py: 4 }}>
                     <Typography color="text.secondary">No records match the current filters.</Typography>
                   </TableCell>
                 </TableRow>

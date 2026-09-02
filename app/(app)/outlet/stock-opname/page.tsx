@@ -154,9 +154,9 @@ export default function OutletStockOpnamePage() {
         {/* ── Top accent bar ── */}
         <Box sx={{ height: 3, bgcolor: 'primary.main' }} />
 
-        <Box sx={{ p: 2 }}>
+        <Box sx={{ p: { xs: 1.5, sm: 2 } }}>
           {/* Period selector — compact strip */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+          <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { xs: 'stretch', sm: 'center' }, gap: 1, mb: 2 }}>
             <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: 1 }}>
               Type
             </Typography>
@@ -195,7 +195,7 @@ export default function OutletStockOpnamePage() {
             </ToggleButtonGroup>
 
             {/* Inline date range display */}
-            <Box sx={{ ml: 'auto', display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexShrink: 0 }}>
               {periodType === 'daily_packaging' ? (
                 <Chip
                   icon={<LockIcon style={{ fontSize: 12 }} />}
@@ -217,15 +217,15 @@ export default function OutletStockOpnamePage() {
             </Box>
           </Box>
 
-          {/* Form fields — 2-column row */}
+          {/* Form fields — responsive grid: 1 col mobile, 2 col tablet, 4 col desktop */}
           <Box
             sx={{
               display: 'grid',
-              gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' },
+              gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' },
               gap: 1.5,
               mb: 2,
               p: 1.5,
-              bgcolor: 'grey.50',
+              bgcolor: '#F0F4FA',
               borderRadius: 1,
               border: '1px solid',
               borderColor: 'divider',
@@ -304,7 +304,7 @@ export default function OutletStockOpnamePage() {
           </Box>
 
           {/* KPI summary strip */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5, flexWrap: 'wrap' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 1.5, flexWrap: 'wrap' }}>
             <Chip
               label={`${details.length} products`}
               size="small"
@@ -335,101 +335,103 @@ export default function OutletStockOpnamePage() {
           </Box>
 
           {/* Detail table */}
-          <TableContainer
-            sx={{
-              border: '1px solid',
-              borderColor: 'divider',
-              borderRadius: 1,
-              maxHeight: 460,
-            }}
-          >
-            <Table size="small" stickyHeader sx={{ minWidth: 1100 }}>
-              <TableHead>
-                <TableRow sx={{ bgcolor: 'grey.50' }}>
-                  <TableCell sx={{ fontWeight: 700, fontSize: 11, whiteSpace: 'nowrap', position: 'sticky', left: 0, bgcolor: 'grey.50', zIndex: 3, minWidth: 160, borderRight: '1px solid', borderColor: 'divider', py: 0.75 }}>
-                    Product
-                  </TableCell>
-                  <TableCell sx={{ fontWeight: 700, fontSize: 11, whiteSpace: 'nowrap', textAlign: 'center', py: 0.75, minWidth: 40 }}>Unit</TableCell>
-                  <TableCell sx={{ fontWeight: 700, fontSize: 11, whiteSpace: 'nowrap', textAlign: 'right', py: 0.75, minWidth: 48 }}>Beg.</TableCell>
-                  <TableCell sx={{ fontWeight: 700, fontSize: 11, whiteSpace: 'nowrap', textAlign: 'right', py: 0.75, minWidth: 44 }}>Mob.</TableCell>
-                  <TableCell sx={{ fontWeight: 700, fontSize: 11, whiteSpace: 'nowrap', textAlign: 'right', py: 0.75, minWidth: 40 }}>SP</TableCell>
-                  <TableCell sx={{ fontWeight: 700, fontSize: 11, whiteSpace: 'nowrap', textAlign: 'right', py: 0.75, minWidth: 40 }}>T.In</TableCell>
-                  <TableCell sx={{ fontWeight: 700, fontSize: 11, whiteSpace: 'nowrap', textAlign: 'right', py: 0.75, minWidth: 52, color: 'error.dark', bgcolor: 'error.lighter' }}>Sales</TableCell>
-                  <TableCell sx={{ fontWeight: 700, fontSize: 11, whiteSpace: 'nowrap', textAlign: 'right', py: 0.75, minWidth: 40 }}>NS</TableCell>
-                  <TableCell sx={{ fontWeight: 700, fontSize: 11, whiteSpace: 'nowrap', textAlign: 'right', py: 0.75, minWidth: 48, color: 'warning.dark', bgcolor: 'warning.lighter' }}>Waste</TableCell>
-                  <TableCell sx={{ fontWeight: 700, fontSize: 11, whiteSpace: 'nowrap', textAlign: 'right', py: 0.75, minWidth: 44 }}>T.Out</TableCell>
-                  <TableCell sx={{ fontWeight: 700, fontSize: 11, whiteSpace: 'nowrap', textAlign: 'center', py: 0.75, minWidth: 48, bgcolor: 'info.lighter', color: 'info.dark' }}>Bal.</TableCell>
-                  <TableCell sx={{ fontWeight: 700, fontSize: 11, whiteSpace: 'nowrap', textAlign: 'center', py: 0.75, minWidth: 72, bgcolor: 'primary.lighter', color: 'primary.dark' }}>
-                    ACTUAL *
-                  </TableCell>
-                  <TableCell sx={{ fontWeight: 700, fontSize: 11, whiteSpace: 'nowrap', textAlign: 'right', py: 0.75, minWidth: 44 }}>Var.</TableCell>
-                  <TableCell sx={{ fontWeight: 700, fontSize: 11, whiteSpace: 'nowrap', textAlign: 'right', py: 0.75, minWidth: 70 }}>Value</TableCell>
-                  <TableCell sx={{ fontWeight: 700, fontSize: 11, whiteSpace: 'nowrap', textAlign: 'center', py: 0.75, minWidth: 108, bgcolor: 'primary.lighter', color: 'primary.dark' }}>
-                    Photo *
-                  </TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {details.map((d, idx) => {
-                  const photos = photosByDetail[d.detailId] || [];
-                  const meetsMin = photos.length >= 3;
-                  return (
-                    <TableRow key={d.detailId} sx={{ '&:last-child td': { border: 0 } }}>
-                      <TableCell sx={{ position: 'sticky', left: 0, bgcolor: 'background.paper', zIndex: 1, borderRight: '1px solid', borderColor: 'divider', py: 0.5 }}>
-                        <Typography variant="body2" sx={{ fontWeight: 500, fontSize: 12 }}>{d.productName}</Typography>
-                        <Typography variant="caption" sx={{ fontFamily: 'monospace', color: 'text.disabled', fontSize: 10 }}>{d.productCode}</Typography>
-                      </TableCell>
-                      <TableCell align="center" sx={{ py: 0.5 }}><Typography variant="caption" sx={{ fontSize: 11 }}>{d.uomName}</Typography></TableCell>
-                      <TableCell align="right" sx={{ py: 0.5 }}><Typography variant="caption" sx={{ fontFamily: 'monospace', fontSize: 11 }}>{d.beginningBalance}</Typography></TableCell>
-                      <TableCell align="right" sx={{ py: 0.5 }}><Typography variant="caption" sx={{ fontFamily: 'monospace', fontSize: 11 }}>{d.mobilitas}</Typography></TableCell>
-                      <TableCell align="right" sx={{ py: 0.5 }}><Typography variant="caption" sx={{ fontFamily: 'monospace', fontSize: 11 }}>{d.selfPickup}</Typography></TableCell>
-                      <TableCell align="right" sx={{ py: 0.5 }}><Typography variant="caption" sx={{ fontFamily: 'monospace', fontSize: 11 }}>{d.transferIn}</Typography></TableCell>
-                      <TableCell align="right" sx={{ py: 0.5, bgcolor: 'error.lighter' }}><Typography variant="caption" sx={{ fontFamily: 'monospace', fontSize: 11, fontWeight: 600 }}>{d.salesMenu}</Typography></TableCell>
-                      <TableCell align="right" sx={{ py: 0.5 }}><Typography variant="caption" sx={{ fontFamily: 'monospace', fontSize: 11 }}>{d.nonSales}</Typography></TableCell>
-                      <TableCell align="right" sx={{ py: 0.5, bgcolor: 'warning.lighter' }}><Typography variant="caption" sx={{ fontFamily: 'monospace', fontSize: 11, fontWeight: 600 }}>{d.wasteQty}</Typography></TableCell>
-                      <TableCell align="right" sx={{ py: 0.5 }}><Typography variant="caption" sx={{ fontFamily: 'monospace', fontSize: 11 }}>{d.transferOut}</Typography></TableCell>
-                      <TableCell align="center" sx={{ py: 0.5 }}>
-                        <Chip label={d.balanceStock} size="small" color="info" variant="outlined" sx={{ fontFamily: 'monospace', fontWeight: 700, fontSize: 10, height: 20 }} />
-                      </TableCell>
-                      <TableCell align="center" sx={{ py: 0.5 }}>
-                        <TextField
-                          size="small"
-                          type="number"
-                          value={d.actualStock}
-                          onChange={(e) => updateDetail(idx, 'actualStock', numField(e.target.value))}
-                          sx={{ width: 64 }}
-                          slotProps={{ htmlInput: { min: 0 } }}
-                        />
-                      </TableCell>
-                      <TableCell align="right" sx={{ py: 0.5 }}>
-                        <Typography
-                          variant="caption"
-                          sx={{ fontFamily: 'monospace', fontWeight: 700, fontSize: 11, color: d.varianceQty !== 0 ? 'error.main' : 'success.main' }}
-                        >
-                          {d.varianceQty > 0 ? '+' : ''}{d.varianceQty}
-                        </Typography>
-                      </TableCell>
-                      <TableCell align="right" sx={{ py: 0.5 }}>
-                        <Typography
-                          variant="caption"
-                          sx={{ fontFamily: 'monospace', fontWeight: 700, fontSize: 11, color: d.varianceValue !== 0 ? 'error.main' : 'success.main' }}
-                        >
-                          {d.varianceValue !== 0 ? fmtCurr(d.varianceValue) : '-'}
-                        </Typography>
-                      </TableCell>
-                      <TableCell align="center" sx={{ py: 0.5, bgcolor: 'grey.50' }}>
-                        <MiniPhotoPicker
-                          photos={photos}
-                          onPhotosChange={(p) => handlePhotosChange(d.detailId, p)}
-                          minPhotos={3}
-                        />
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </TableContainer>
+          <Box sx={{ overflowX: 'auto', '&::-webkit-scrollbar': { height: 6 }, '&::-webkit-scrollbar-thumb': { bgcolor: 'divider', borderRadius: 3 } }}>
+            <TableContainer
+              sx={{
+                border: '1px solid',
+                borderColor: 'divider',
+                borderRadius: 1,
+                maxHeight: 460,
+              }}
+            >
+              <Table size="small" stickyHeader sx={{ minWidth: { xs: 800, sm: 'auto' } }}>
+                <TableHead>
+                  <TableRow sx={{ bgcolor: '#F0F4FA' }}>
+                    <TableCell sx={{ fontWeight: 700, fontSize: 11, whiteSpace: 'nowrap', position: 'sticky', left: 0, bgcolor: '#F0F4FA', zIndex: 3, minWidth: 160, borderRight: '1px solid', borderColor: 'divider', py: 0.75 }}>
+                      Product
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: 700, fontSize: 11, whiteSpace: 'nowrap', textAlign: 'center', py: 0.75, minWidth: 40, bgcolor: '#F0F4FA' }}>Unit</TableCell>
+                    <TableCell sx={{ fontWeight: 700, fontSize: 11, whiteSpace: 'nowrap', textAlign: 'right', py: 0.75, minWidth: 48, bgcolor: '#F0F4FA' }}>Beg.</TableCell>
+                    <TableCell sx={{ fontWeight: 700, fontSize: 11, whiteSpace: 'nowrap', textAlign: 'right', py: 0.75, minWidth: 44, bgcolor: '#F0F4FA' }}>Mob.</TableCell>
+                    <TableCell sx={{ fontWeight: 700, fontSize: 11, whiteSpace: 'nowrap', textAlign: 'right', py: 0.75, minWidth: 40, bgcolor: '#F0F4FA' }}>SP</TableCell>
+                    <TableCell sx={{ fontWeight: 700, fontSize: 11, whiteSpace: 'nowrap', textAlign: 'right', py: 0.75, minWidth: 40, bgcolor: '#F0F4FA' }}>T.In</TableCell>
+                    <TableCell sx={{ fontWeight: 700, fontSize: 11, whiteSpace: 'nowrap', textAlign: 'right', py: 0.75, minWidth: 52, color: 'error.dark', bgcolor: 'error.lighter' }}>Sales</TableCell>
+                    <TableCell sx={{ fontWeight: 700, fontSize: 11, whiteSpace: 'nowrap', textAlign: 'right', py: 0.75, minWidth: 40, bgcolor: '#F0F4FA' }}>NS</TableCell>
+                    <TableCell sx={{ fontWeight: 700, fontSize: 11, whiteSpace: 'nowrap', textAlign: 'right', py: 0.75, minWidth: 48, color: 'warning.dark', bgcolor: 'warning.lighter' }}>Waste</TableCell>
+                    <TableCell sx={{ fontWeight: 700, fontSize: 11, whiteSpace: 'nowrap', textAlign: 'right', py: 0.75, minWidth: 44, bgcolor: '#F0F4FA' }}>T.Out</TableCell>
+                    <TableCell sx={{ fontWeight: 700, fontSize: 11, whiteSpace: 'nowrap', textAlign: 'center', py: 0.75, minWidth: 48, bgcolor: '#F0F4FA', color: 'info.dark' }}>Bal.</TableCell>
+                    <TableCell sx={{ fontWeight: 700, fontSize: 11, whiteSpace: 'nowrap', textAlign: 'center', py: 0.75, minWidth: 72, bgcolor: 'primary.lighter', color: 'primary.dark' }}>
+                      ACTUAL *
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: 700, fontSize: 11, whiteSpace: 'nowrap', textAlign: 'right', py: 0.75, minWidth: 44, bgcolor: '#F0F4FA' }}>Var.</TableCell>
+                    <TableCell sx={{ fontWeight: 700, fontSize: 11, whiteSpace: 'nowrap', textAlign: 'right', py: 0.75, minWidth: 70, bgcolor: '#F0F4FA' }}>Value</TableCell>
+                    <TableCell sx={{ fontWeight: 700, fontSize: 11, whiteSpace: 'nowrap', textAlign: 'center', py: 0.75, minWidth: 108, bgcolor: 'primary.lighter', color: 'primary.dark' }}>
+                      Photo *
+                    </TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {details.map((d, idx) => {
+                    const photos = photosByDetail[d.detailId] || [];
+                    const meetsMin = photos.length >= 3;
+                    return (
+                      <TableRow key={d.detailId} sx={{ '&:last-child td': { border: 0 } }}>
+                        <TableCell sx={{ position: 'sticky', left: 0, bgcolor: 'background.paper', zIndex: 1, borderRight: '1px solid', borderColor: 'divider', py: 0.5 }}>
+                          <Typography variant="body2" sx={{ fontWeight: 500, fontSize: 12 }}>{d.productName}</Typography>
+                          <Typography variant="caption" sx={{ fontFamily: 'monospace', color: 'text.disabled', fontSize: 10 }}>{d.productCode}</Typography>
+                        </TableCell>
+                        <TableCell align="center" sx={{ py: 0.5, bgcolor: 'background.paper' }}><Typography variant="caption" sx={{ fontSize: 11 }}>{d.uomName}</Typography></TableCell>
+                        <TableCell align="right" sx={{ py: 0.5, bgcolor: 'background.paper' }}><Typography variant="caption" sx={{ fontFamily: 'monospace', fontSize: 11 }}>{d.beginningBalance}</Typography></TableCell>
+                        <TableCell align="right" sx={{ py: 0.5, bgcolor: 'background.paper' }}><Typography variant="caption" sx={{ fontFamily: 'monospace', fontSize: 11 }}>{d.mobilitas}</Typography></TableCell>
+                        <TableCell align="right" sx={{ py: 0.5, bgcolor: 'background.paper' }}><Typography variant="caption" sx={{ fontFamily: 'monospace', fontSize: 11 }}>{d.selfPickup}</Typography></TableCell>
+                        <TableCell align="right" sx={{ py: 0.5, bgcolor: 'background.paper' }}><Typography variant="caption" sx={{ fontFamily: 'monospace', fontSize: 11 }}>{d.transferIn}</Typography></TableCell>
+                        <TableCell align="right" sx={{ py: 0.5, bgcolor: 'error.lighter' }}><Typography variant="caption" sx={{ fontFamily: 'monospace', fontSize: 11, fontWeight: 600 }}>{d.salesMenu}</Typography></TableCell>
+                        <TableCell align="right" sx={{ py: 0.5, bgcolor: 'background.paper' }}><Typography variant="caption" sx={{ fontFamily: 'monospace', fontSize: 11 }}>{d.nonSales}</Typography></TableCell>
+                        <TableCell align="right" sx={{ py: 0.5, bgcolor: 'warning.lighter' }}><Typography variant="caption" sx={{ fontFamily: 'monospace', fontSize: 11, fontWeight: 600 }}>{d.wasteQty}</Typography></TableCell>
+                        <TableCell align="right" sx={{ py: 0.5, bgcolor: 'background.paper' }}><Typography variant="caption" sx={{ fontFamily: 'monospace', fontSize: 11 }}>{d.transferOut}</Typography></TableCell>
+                        <TableCell align="center" sx={{ py: 0.5, bgcolor: 'background.paper' }}>
+                          <Chip label={d.balanceStock} size="small" color="info" variant="outlined" sx={{ fontFamily: 'monospace', fontWeight: 700, fontSize: 10, height: 20 }} />
+                        </TableCell>
+                        <TableCell align="center" sx={{ py: 0.5, bgcolor: 'background.paper' }}>
+                          <TextField
+                            size="small"
+                            type="number"
+                            value={d.actualStock}
+                            onChange={(e) => updateDetail(idx, 'actualStock', numField(e.target.value))}
+                            sx={{ width: 64 }}
+                            slotProps={{ htmlInput: { min: 0 } }}
+                          />
+                        </TableCell>
+                        <TableCell align="right" sx={{ py: 0.5, bgcolor: 'background.paper' }}>
+                          <Typography
+                            variant="caption"
+                            sx={{ fontFamily: 'monospace', fontWeight: 700, fontSize: 11, color: d.varianceQty !== 0 ? 'error.main' : 'success.main' }}
+                          >
+                            {d.varianceQty > 0 ? '+' : ''}{d.varianceQty}
+                          </Typography>
+                        </TableCell>
+                        <TableCell align="right" sx={{ py: 0.5, bgcolor: 'background.paper' }}>
+                          <Typography
+                            variant="caption"
+                            sx={{ fontFamily: 'monospace', fontWeight: 700, fontSize: 11, color: d.varianceValue !== 0 ? 'error.main' : 'success.main' }}
+                          >
+                            {d.varianceValue !== 0 ? fmtCurr(d.varianceValue) : '-'}
+                          </Typography>
+                        </TableCell>
+                        <TableCell align="center" sx={{ py: 0.5, bgcolor: '#F0F4FA' }}>
+                          <MiniPhotoPicker
+                            photos={photos}
+                            onPhotosChange={(p) => handlePhotosChange(d.detailId, p)}
+                            minPhotos={3}
+                          />
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Box>
 
           <Typography variant="caption" color="text.disabled" sx={{ display: 'block', mt: 0.75, fontSize: 10 }}>
             * Enter physical count. Variance auto-calculated. Min 3 photos per product.
@@ -493,12 +495,12 @@ function MiniPhotoPicker({ photos, onPhotosChange, minPhotos }: MiniPhotoPickerP
       <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.25 }}>
         <Box sx={{ display: 'flex', gap: 0.25, flexWrap: 'wrap', justifyContent: 'center' }}>
           {photos.map((src, idx) => (
-            <Box key={idx} sx={{ position: 'relative', width: 28, height: 28 }}>
+            <Box key={idx} sx={{ position: 'relative', width: { xs: 24, sm: 28 }, height: { xs: 24, sm: 28 } }}>
               <Box
                 component="img"
                 src={src}
                 alt={`Photo ${idx + 1}`}
-                sx={{ width: 28, height: 28, borderRadius: 0.5, objectFit: 'cover', border: '1px solid', borderColor: 'divider' }}
+                sx={{ width: { xs: 24, sm: 28 }, height: { xs: 24, sm: 28 }, borderRadius: 0.5, objectFit: 'cover', border: '1px solid', borderColor: 'divider' }}
               />
               <IconButton
                 size="small"

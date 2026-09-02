@@ -1,17 +1,18 @@
 'use client';
 
-import { useState } from 'react';
-import { Box, Typography, Snackbar, Alert } from '@mui/material';
+import { useState, useEffect } from 'react';
+import { Box, Typography, Snackbar, Alert, CircularProgress, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import { useMemo } from 'react';
 import PageHeader from '@/components/PageHeader';
 import ModernTable from '@/components/ModernTable';
 import DataDrawer, { DrawerField, DrawerMode } from '@/components/DataDrawer';
 import { TableColumn } from '@/components/ModernTable';
-import { MOCK_PRICELISTS, PriceList } from '@/lib/mockData';
+import { PriceList } from '@/lib/api/client';
+import { apiClient } from '@/lib/api/client';
 
 const fmtCurr = (n: number) =>
-  new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(n);
+  new Intl.NumberFormat('en-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(n);
 
 const fmtNow = () => {
   const d = new Date();
@@ -48,9 +49,12 @@ const emptyValues = (): Record<string, unknown> => ({
 });
 
 export default function PriceListPage() {
-  const [data, setData] = useState<PriceList[]>(() =>
-    [...MOCK_PRICELISTS].sort((a, b) => a.productName.localeCompare(b.productName))
-  );
+  const [data, setData] = useState<PriceList[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
+  const [supplierFilter, setSupplierFilter] = useState<string>('all');
+  const [currencyFilter, setCurrencyFilter] = useState<string>('all');
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerMode, setDrawerMode] = useState<DrawerMode>(null);
@@ -58,6 +62,29 @@ export default function PriceListPage() {
   const [values, setValues] = useState<Record<string, unknown>>(emptyValues());
   const [saving, setSaving] = useState(false);
   const [snack, setSnack] = useState({ open: false, msg: '', sev: 'success' as 'success' | 'error' });
+
+  useEffect(() => {
+    apiClient.getPriceLists()
+      .then((lists) => setData(lists.sort((a, b) => (a.productName ?? '').localeCompare(b.productName ?? ''))))
+      .catch((err) => setError(err instanceof Error ? err.message : 'Failed to load price lists'))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const supplierOptions = useMemo(() => {
+    const seen = new Set<string>();
+    return data.filter(r => { if (!r.supplierName) return false; if (seen.has(r.supplierName)) return false; seen.add(r.supplierName); return true; })
+      .map(r => ({ value: r.supplierName!, label: r.supplierName! }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+  }, [data]);
+
+  const filtered = useMemo(() => {
+    return data.filter(r => {
+      if (statusFilter !== 'all' && ((r.flagActive ?? true) !== (statusFilter === 'active'))) return false;
+      if (supplierFilter !== 'all' && r.supplierName !== supplierFilter) return false;
+      if (currencyFilter !== 'all' && r.currency !== currencyFilter) return false;
+      return true;
+    });
+  }, [data, statusFilter, supplierFilter, currencyFilter]);
 
   const showSnack = (msg: string, sev: 'success' | 'error' = 'success') => {
     setSnack({ open: true, msg, sev });
@@ -80,47 +107,53 @@ export default function PriceListPage() {
 
   const handleSave = async () => {
     setSaving(true);
-    await new Promise((r) => setTimeout(r, 600));
-    const now = fmtNow();
-    if (drawerMode === 'add') {
-      const newPl: PriceList = {
-        id: Number(values.id),
-        companyId: Number(values.companyId),
-        esbId: Number(values.esbId),
-        productEsbId: Number(values.productEsbId ?? 0),
-        branchEsbId: Number(values.branchEsbId ?? 0),
-        price: Number(values.price ?? 0),
-        flagActive: Boolean(values.flagActive),
-        priceDate: String(values.priceDate ?? ''),
-        supplierName: String(values.supplierName ?? ''),
-        productName: String(values.productName ?? ''),
-        productCode: String(values.productCode ?? ''),
-        unitName: String(values.unitName ?? ''),
-        currency: String(values.currency ?? 'IDR'),
-        expiredDate: String(values.expiredDate ?? ''),
-        pricelistNum: String(values.pricelistNum ?? ''),
-        syncedAt: fmtNow(),
-        updatedAt: now,
-      };
-      setData((prev) => [...prev, newPl].sort((a, b) => a.productName.localeCompare(b.productName)));
-      showSnack('Price List added successfully');
-    } else if (drawerMode === 'edit' && selected) {
-      const updated: PriceList = { ...selected, ...values, updatedAt: now } as PriceList;
-      setData((prev) => prev.map((d) => d.id === updated.id ? updated : d).sort((a, b) => a.productName.localeCompare(b.productName)));
-      showSnack('Price List updated successfully');
+    try {
+      const now = fmtNow();
+      if (drawerMode === 'add') {
+        const newPl: PriceList = {
+          id: Number(values.id),
+          companyId: Number(values.companyId ?? 3),
+          esbId: Number(values.esbId ?? 0),
+          productEsbId: Number(values.productEsbId ?? 0),
+          branchEsbId: (values.branchEsbId ?? 'ALL') as number | 'ALL',
+          price: Number(values.price ?? 0),
+          flagActive: Boolean(values.flagActive),
+          priceDate: String(values.priceDate ?? ''),
+          supplierName: String(values.supplierName ?? ''),
+          productName: String(values.productName ?? ''),
+          productCode: String(values.productCode ?? ''),
+          unitName: String(values.unitName ?? ''),
+          currency: String(values.currency ?? 'IDR'),
+          expiredDate: String(values.expiredDate ?? ''),
+          pricelistNum: String(values.pricelistNum ?? ''),
+          syncedAt: fmtNow(),
+          updatedAt: now,
+        };
+        setData((prev) => [...prev, newPl].sort((a, b) => (a.productName ?? '').localeCompare(b.productName ?? '')));
+        showSnack('Price List added successfully');
+      } else if (drawerMode === 'edit' && selected) {
+        const updated: PriceList = { ...selected, ...values, updatedAt: now } as PriceList;
+        setData((prev) => prev.map((d) => d.id === updated.id ? updated : d).sort((a, b) => (a.productName ?? '').localeCompare(b.productName ?? '')));
+        showSnack('Price List updated successfully');
+      }
+      setDrawerOpen(false);
+    } catch (err) {
+      showSnack(err instanceof Error ? err.message : 'Failed to save price list', 'error');
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
-    setDrawerOpen(false);
   };
 
   const handleDelete = async () => {
     if (!selected) return;
     setSaving(true);
-    await new Promise((r) => setTimeout(r, 500));
-    setData((prev) => prev.filter((d) => d.id !== selected.id));
-    showSnack('Price List deleted', 'error');
-    setSaving(false);
-    setDrawerOpen(false);
+    try {
+      setData((prev) => prev.filter((d) => d.id !== selected.id));
+      showSnack('Price List deleted', 'error');
+    } finally {
+      setSaving(false);
+      setDrawerOpen(false);
+    }
   };
 
   const columns: TableColumn<PriceList>[] = useMemo(() => [
@@ -130,36 +163,37 @@ export default function PriceListPage() {
     },
     {
       id: 'pricelistNum', label: 'PL No.', width: 130,
-      render: (r) => <Box component="span" sx={{ fontFamily: 'monospace', fontSize: 12, fontWeight: 600 }}>{r.pricelistNum}</Box>,
+      render: (r) => <Box component="span" sx={{ fontFamily: 'monospace', fontSize: 12, fontWeight: 600 }}>{r.pricelistNum ?? '-'}</Box>,
     },
     {
       id: 'productCode', label: 'Product Code', width: 120,
-      render: (r) => <Box component="span" sx={{ fontFamily: 'monospace', fontSize: 12 }}>{r.productCode}</Box>,
+      render: (r) => <Box component="span" sx={{ fontFamily: 'monospace', fontSize: 12 }}>{r.productCode ?? '-'}</Box>,
     },
     {
       id: 'productName', label: 'Product Name', sortable: true,
-      render: (r) => <Typography variant="body2" sx={{ fontWeight: 500 }}>{r.productName}</Typography>,
+      render: (r) => <Typography variant="body2" sx={{ fontWeight: 500 }}>{r.productName ?? '-'}</Typography>,
     },
     {
       id: 'unitName', label: 'Unit', width: 100,
+      render: (r) => <Box sx={{ fontSize: 13 }}>{r.unitName ?? '-'}</Box>,
     },
     {
       id: 'price', label: 'Price', align: 'right' as const,
       render: (r) => (
         <Typography variant="body2" sx={{ fontWeight: 700, fontFamily: 'monospace', color: 'primary.main', fontSize: 13 }}>
-          {fmtCurr(r.price)}
+          {fmtCurr(r.price ?? 0)}
         </Typography>
       ),
     },
     {
       id: 'supplierName', label: 'Supplier', width: 150,
-      render: (r) => <Typography variant="caption" color="text.secondary" sx={{ maxWidth: 150, display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.supplierName}</Typography>,
+      render: (r) => <Typography variant="caption" color="text.secondary" sx={{ maxWidth: 150, display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.supplierName ?? '-'}</Typography>,
     },
     {
       id: 'flagActive', label: 'Status', align: 'center',
       render: (r) => (
-        <Box component="span" sx={{ px: 1.5, py: 0.5, borderRadius: 1, fontWeight: 600, fontSize: 12, bgcolor: r.flagActive ? 'success.lighter' : 'grey.200', color: r.flagActive ? 'success.dark' : 'text.secondary' }}>
-          {r.flagActive ? 'Active' : 'Inactive'}
+        <Box component="span" sx={{ px: 1.5, py: 0.5, borderRadius: 1, fontWeight: 600, fontSize: 12, bgcolor: (r.flagActive ?? true) ? 'success.lighter' : 'grey.200', color: (r.flagActive ?? true) ? 'success.dark' : 'text.secondary' }}>
+          {(r.flagActive ?? true) ? 'Active' : 'Inactive'}
         </Box>
       ),
     },
@@ -170,14 +204,62 @@ export default function PriceListPage() {
     { label: 'Delete', icon: <DeleteIcon fontSize="small" />, color: 'error' as const, onClick: (r: unknown) => handleOpen('delete', r as PriceList), tooltip: 'Delete price list' },
   ];
 
+  if (loading) {
+    return (
+      <Box>
+        <PageHeader title="Price List" subtitle="Product pricing master data — by supplier and unit" breadcrumbs={['Data', 'Price List']} />
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}>
+          <CircularProgress />
+        </Box>
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box>
+        <PageHeader title="Price List" subtitle="Product pricing master data — by supplier and unit" breadcrumbs={['Data', 'Price List']} />
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}>
+          <Alert severity="error" variant="filled">{error}</Alert>
+        </Box>
+      </Box>
+    );
+  }
+
   return (
     <Box>
       <PageHeader title="Price List" subtitle="Product pricing master data — by supplier and unit" breadcrumbs={['Data', 'Price List']} />
+      <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap', alignItems: 'center' }}>
+        <FormControl size="small" sx={{ minWidth: 140 }}>
+          <InputLabel>Status</InputLabel>
+          <Select label="Status" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as 'all' | 'active' | 'inactive')}>
+            <MenuItem value="all">All</MenuItem>
+            <MenuItem value="active">Active</MenuItem>
+            <MenuItem value="inactive">Inactive</MenuItem>
+          </Select>
+        </FormControl>
+        <FormControl size="small" sx={{ minWidth: 160 }}>
+          <InputLabel>Supplier</InputLabel>
+          <Select label="Supplier" value={supplierFilter} onChange={(e) => setSupplierFilter(e.target.value)}>
+            <MenuItem value="all">All Suppliers</MenuItem>
+            {supplierOptions.map((o) => <MenuItem key={o.value} value={o.value}>{o.label}</MenuItem>)}
+          </Select>
+        </FormControl>
+        <FormControl size="small" sx={{ minWidth: 120 }}>
+          <InputLabel>Currency</InputLabel>
+          <Select label="Currency" value={currencyFilter} onChange={(e) => setCurrencyFilter(e.target.value)}>
+            <MenuItem value="all">All</MenuItem>
+            <MenuItem value="IDR">IDR</MenuItem>
+            <MenuItem value="USD">USD</MenuItem>
+            <MenuItem value="SGD">SGD</MenuItem>
+          </Select>
+        </FormControl>
+      </Box>
       <ModernTable
         title="Price Lists"
-        subtitle={`${data.length} total records`}
+        subtitle={`${filtered.length} of ${data.length} records`}
         columns={columns}
-        data={data}
+        data={filtered}
         keyField="id"
         actions={actions}
         searchPlaceholder="Search by product, code, or supplier..."

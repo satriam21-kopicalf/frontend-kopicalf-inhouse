@@ -1,32 +1,19 @@
 'use client';
 
-import { useState } from 'react';
-import { Box, Typography, Snackbar, Alert } from '@mui/material';
+import { useState, useEffect } from 'react';
+import { Box, Typography, Snackbar, Alert, CircularProgress, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import { useMemo } from 'react';
 import PageHeader from '@/components/PageHeader';
 import ModernTable from '@/components/ModernTable';
 import DataDrawer, { DrawerField, DrawerMode } from '@/components/DataDrawer';
-import { MOCK_BRANCHES, Branch } from '@/lib/mockData';
+import { apiClient, Branch } from '@/lib/api/client';
 import { TableColumn } from '@/components/ModernTable';
-
-const BRANCH_TYPE_OPTIONS = [
-  { value: 'OUTLET', label: 'Outlet' },
-  { value: 'HUB WH', label: 'Hub Warehouse' },
-  { value: 'HUB CK', label: 'Hub Central Kitchen' },
-  { value: 'HEAD OFFICE', label: 'Head Office' },
-  { value: 'BULK ORDER', label: 'Bulk Order' },
-  { value: 'COTR', label: 'COTR' },
-];
 
 const FIELDS: DrawerField[] = [
   { name: 'branchName', label: 'Branch Name', required: true, gridSpan: 2 },
   { name: 'branchCode', label: 'Branch Code', required: true },
-  { name: 'branchType', label: 'Branch Type', type: 'select', options: BRANCH_TYPE_OPTIONS, required: true },
-  { name: 'brandName', label: 'Brand Name', placeholder: 'e.g. Kopi Calf' },
   { name: 'address', label: 'Address', gridSpan: 2 },
-  { name: 'phone', label: 'Phone' },
-  { name: 'omsVersion', label: 'OMS Version', placeholder: 'e.g. v1.0.0' },
   { name: 'isActive', label: 'Active', type: 'switch' },
 ];
 
@@ -39,20 +26,18 @@ const fmtNow = () => {
 const emptyValues = (): Record<string, unknown> => ({
   branchName: '',
   branchCode: '',
-  branchType: 'OUTLET',
-  brandName: 'Kopi Calf',
   address: '',
-  phone: '',
-  omsVersion: '',
   isActive: true,
   syncedAt: fmtNow(),
   updatedAt: fmtNow(),
 });
 
 export default function BranchPage() {
-  const [data, setData] = useState<Branch[]>(() =>
-    [...MOCK_BRANCHES].sort((a, b) => a.branchName.localeCompare(b.branchName))
-  );
+  const [data, setData] = useState<Branch[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
+  const [locationFilter, setLocationFilter] = useState<string>('all');
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerMode, setDrawerMode] = useState<DrawerMode>(null);
@@ -61,9 +46,42 @@ export default function BranchPage() {
   const [saving, setSaving] = useState(false);
   const [snack, setSnack] = useState({ open: false, msg: '', sev: 'success' as 'success' | 'error' });
 
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const branches = await apiClient.getBranches();
+      setData(branches.sort((a, b) => a.branchName.localeCompare(b.branchName)));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch branches');
+      console.error('Error fetching branches:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
   const showSnack = (msg: string, sev: 'success' | 'error' = 'success') => {
     setSnack({ open: true, msg, sev });
   };
+
+  const locationOptions = useMemo(() => {
+    const seen = new Set<string>();
+    return data.filter(r => { if (!r.address) return false; if (seen.has(r.address)) return false; seen.add(r.address); return true; })
+      .map(r => ({ value: r.address!, label: r.address! }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+  }, [data]);
+
+  const filtered = useMemo(() => {
+    return data.filter(r => {
+      if (statusFilter !== 'all' && ((r.isActive ?? true) !== (statusFilter === 'active'))) return false;
+      if (locationFilter !== 'all' && r.address !== locationFilter) return false;
+      return true;
+    });
+  }, [data, statusFilter, locationFilter]);
 
   const handleOpen = (mode: DrawerMode, row?: Branch) => {
     setDrawerMode(mode);
@@ -82,48 +100,39 @@ export default function BranchPage() {
 
   const handleSave = async () => {
     setSaving(true);
-    await new Promise((r) => setTimeout(r, 600));
-    const now = fmtNow();
-    if (drawerMode === 'add') {
-      const newBranch: Branch = {
-        branchID: Number(values.branchID),
-        esbId: Number(values.esbId),
-        branchName: String(values.branchName ?? ''),
-        branchCode: String(values.branchCode ?? ''),
-        branchType: values.branchType as Branch['branchType'],
-        brandName: String(values.brandName ?? 'Kopi Calf'),
-        address: String(values.address ?? ''),
-        phone: String(values.phone ?? ''),
-        omsVersion: String(values.omsVersion ?? ''),
-        isActive: Boolean(values.isActive),
-        syncedAt: fmtNow(),
-        updatedAt: now,
-      };
-      setData((prev) => [...prev, newBranch].sort((a, b) => a.branchName.localeCompare(b.branchName)));
-      showSnack('Branch added successfully');
-    } else if (drawerMode === 'edit' && selected) {
-      const updated: Branch = { ...selected, ...values, updatedAt: now } as Branch;
-      setData((prev) => prev.map((d) => d.branchID === updated.branchID ? updated : d).sort((a, b) => a.branchName.localeCompare(b.branchName)));
-      showSnack('Branch updated successfully');
+    try {
+      const now = fmtNow();
+      if (drawerMode === 'add') {
+        const newBranch = await apiClient.createBranch(values as Partial<Branch>);
+        setData((prev) => [...prev, newBranch].sort((a, b) => a.branchName.localeCompare(b.branchName)));
+        showSnack('Branch added successfully');
+      } else if (drawerMode === 'edit' && selected) {
+        const updated = await apiClient.updateBranch(selected.branchID, values as Partial<Branch>);
+        setData((prev) => prev.map((d) => d.branchID === updated.branchID ? updated : d).sort((a, b) => a.branchName.localeCompare(b.branchName)));
+        showSnack('Branch updated successfully');
+      }
+      setDrawerOpen(false);
+    } catch (err) {
+      showSnack(err instanceof Error ? err.message : 'Failed to save branch', 'error');
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
-    setDrawerOpen(false);
   };
 
   const handleDelete = async () => {
     if (!selected) return;
     setSaving(true);
-    await new Promise((r) => setTimeout(r, 500));
-    setData((prev) => prev.filter((d) => d.branchID !== selected.branchID));
-    showSnack('Branch deleted', 'error');
-    setSaving(false);
-    setDrawerOpen(false);
+    try {
+      await apiClient.deleteBranch(selected.branchID);
+      setData((prev) => prev.filter((d) => d.branchID !== selected.branchID));
+      showSnack('Branch deleted', 'error');
+      setDrawerOpen(false);
+    } catch (err) {
+      showSnack(err instanceof Error ? err.message : 'Failed to delete branch', 'error');
+    } finally {
+      setSaving(false);
+    }
   };
-
-  const typeBg = (t: string) =>
-    t === 'OUTLET' ? 'primary.lighter' : t === 'HUB WH' ? 'secondary.lighter' : t === 'HEAD OFFICE' ? 'info.lighter' : t === 'HUB CK' ? 'warning.lighter' : 'grey.200';
-  const typeFg = (t: string) =>
-    t === 'OUTLET' ? 'primary.dark' : t === 'HUB WH' ? 'secondary.dark' : t === 'HEAD OFFICE' ? 'info.dark' : t === 'HUB CK' ? 'warning.dark' : 'text.primary';
 
   const columns: TableColumn<Branch>[] = useMemo(() => [
     {
@@ -143,15 +152,8 @@ export default function BranchPage() {
       render: (r) => <Box component="span" sx={{ fontFamily: 'monospace', fontWeight: 600, fontSize: 12 }}>{r.branchCode}</Box>,
     },
     {
-      id: 'branchType', label: 'Type', align: 'center', sortable: true,
-      render: (r) => (
-        <Box component="span" sx={{ px: 1.5, py: 0.5, borderRadius: 1, fontWeight: 600, fontSize: 12, bgcolor: typeBg(r.branchType), color: typeFg(r.branchType) }}>
-          {r.branchType}
-        </Box>
-      ),
-    },
-    {
-      id: 'brandName', label: 'Brand', hideOnMobile: true,
+      id: 'address', label: 'Location', hideOnMobile: true,
+      render: (r) => <Typography variant="caption" sx={{ color: 'text.secondary', maxWidth: 200, display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.address || '-'}</Typography>,
     },
     {
       id: 'isActive', label: 'Status', align: 'center', sortable: true,
@@ -160,6 +162,10 @@ export default function BranchPage() {
           {r.isActive ? 'Active' : 'Inactive'}
         </Box>
       ),
+    },
+    {
+      id: 'syncedAt', label: 'Last Synced', hideOnMobile: true,
+      render: (r) => <Typography variant="caption" sx={{ fontFamily: 'monospace', color: 'text.secondary' }}>{r.syncedAt}</Typography>,
     },
   ], []);
 
@@ -170,23 +176,56 @@ export default function BranchPage() {
 
   return (
     <Box>
-      <PageHeader title="Branch" subtitle="Branch master data — outlets, HUB WH, HUB CK, and HEAD OFFICE locations" breadcrumbs={['Data', 'Branch']} />
-      <ModernTable
-        title="Branches"
-        subtitle={`${data.length} total branches`}
-        columns={columns}
-        data={data}
-        keyField="branchID"
-        actions={actions}
-        searchPlaceholder="Search by name, code, or brand..."
-        searchFields={['branchName', 'branchCode', 'brandName']}
-        pagination={true}
-        defaultRowsPerPage={50}
-        rowsPerPageOptions={[10, 25, 50, 100]}
-        emptyMessage="No branches found."
-        onAdd={() => handleOpen('add')}
-        addButtonLabel="Add Branch"
+      <PageHeader
+        title="Branch"
+        subtitle="Branch master data from database — outlets, warehouses, and head office locations"
+        breadcrumbs={['Data', 'Master', 'Branch']}
       />
+
+      {loading && data.length === 0 ? (
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
+          <CircularProgress />
+        </Box>
+      ) : error && data.length === 0 ? (
+        <Alert severity="error" sx={{ m: 2 }}>{error}</Alert>
+      ) : (
+        <>
+          <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap', alignItems: 'center' }}>
+            <FormControl size="small" sx={{ minWidth: 140 }}>
+              <InputLabel>Status</InputLabel>
+              <Select label="Status" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as 'all' | 'active' | 'inactive')}>
+                <MenuItem value="all">All</MenuItem>
+                <MenuItem value="active">Active</MenuItem>
+                <MenuItem value="inactive">Inactive</MenuItem>
+              </Select>
+            </FormControl>
+            <FormControl size="small" sx={{ minWidth: 160 }}>
+              <InputLabel>Location</InputLabel>
+              <Select label="Location" value={locationFilter} onChange={(e) => setLocationFilter(e.target.value)}>
+                <MenuItem value="all">All Locations</MenuItem>
+                {locationOptions.map((o) => <MenuItem key={o.value} value={o.value}>{o.label}</MenuItem>)}
+              </Select>
+            </FormControl>
+          </Box>
+          <ModernTable
+            title="Branches"
+            subtitle={`${filtered.length} of ${data.length} branches`}
+            columns={columns}
+            data={filtered}
+            keyField="branchID"
+            actions={actions}
+            searchPlaceholder="Search by name or code..."
+            searchFields={['branchName', 'branchCode']}
+            pagination={true}
+            defaultRowsPerPage={50}
+            rowsPerPageOptions={[10, 25, 50, 100]}
+            emptyMessage="No branches found."
+            onAdd={() => handleOpen('add')}
+            addButtonLabel="Add Branch"
+          />
+        </>
+      )}
+
       <DataDrawer
         open={drawerOpen}
         mode={drawerMode}

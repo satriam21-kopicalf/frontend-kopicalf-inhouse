@@ -64,9 +64,6 @@ function buildDetails(): HubStockDetail[] {
   });
 }
 
-// Kitchen amber accent
-const ACCENT = '#e65100';
-
 export default function HubCkStockOpnamePage() {
   const [periodType, setPeriodType] = useState<PeriodType>('daily');
   const [date, setDate] = useState(fmtNow());
@@ -143,12 +140,12 @@ export default function HubCkStockOpnamePage() {
           borderColor: 'divider',
         }}
       >
-        {/* Top accent bar — amber/kitchen theme */}
-        <Box sx={{ height: 3, bgcolor: ACCENT }} />
+        {/* Top accent bar — brand red */}
+        <Box sx={{ height: 3, bgcolor: '#C62828' }} />
 
-        <Box sx={{ p: 2 }}>
+        <Box sx={{ p: { xs: 1.5, sm: 2 } }}>
           {/* Period selector — compact strip */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+          <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { xs: 'stretch', sm: 'center' }, gap: 1, mb: 2 }}>
             <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: 1 }}>
               Period
             </Typography>
@@ -170,10 +167,10 @@ export default function HubCkStockOpnamePage() {
                   textTransform: 'none',
                   color: 'text.secondary',
                   '&.Mui-selected': {
-                    bgcolor: ACCENT,
+                    bgcolor: '#C62828',
                     color: '#fff',
-                    borderColor: ACCENT,
-                    '&:hover': { bgcolor: '#bf360c' },
+                    borderColor: '#C62828',
+                    '&:hover': { bgcolor: '#b71c1c' },
                   },
                   '&:hover': { bgcolor: 'action.hover' },
                 },
@@ -187,7 +184,7 @@ export default function HubCkStockOpnamePage() {
             </ToggleButtonGroup>
 
             {/* Date chip */}
-            <Box sx={{ ml: 'auto' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
               {periodType === 'daily' ? (
                 <Chip
                   icon={<LockIcon style={{ fontSize: 12 }} />}
@@ -209,15 +206,15 @@ export default function HubCkStockOpnamePage() {
             </Box>
           </Box>
 
-          {/* Form fields — compact 2-col grid */}
+          {/* Form fields — responsive grid: 1 col mobile, 2 col tablet, 4 col desktop */}
           <Box
             sx={{
               display: 'grid',
-              gridTemplateColumns: { xs: '1fr', sm: 'repeat(4, 1fr)' },
+              gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' },
               gap: 1.5,
               mb: 2,
               p: 1.5,
-              bgcolor: 'grey.50',
+              bgcolor: '#F0F4FA',
               borderRadius: 1,
               border: '1px solid',
               borderColor: 'divider',
@@ -292,7 +289,7 @@ export default function HubCkStockOpnamePage() {
           </Box>
 
           {/* KPI strip */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5, flexWrap: 'wrap' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 1.5, flexWrap: 'wrap' }}>
             <Chip label={`${details.length} products`} size="small" sx={{ fontWeight: 600, fontSize: 11 }} />
             <Chip
               label={`${totals.varianceItems} variance`}
@@ -319,95 +316,97 @@ export default function HubCkStockOpnamePage() {
           </Box>
 
           {/* Detail table */}
-          <TableContainer
-            sx={{
-              border: '1px solid',
-              borderColor: 'divider',
-              borderRadius: 1,
-              maxHeight: 460,
-            }}
-          >
-            <Table size="small" stickyHeader sx={{ minWidth: 780 }}>
-              <TableHead>
-                <TableRow sx={{ bgcolor: 'grey.50' }}>
-                  <TableCell sx={{ fontWeight: 700, fontSize: 11, whiteSpace: 'nowrap', position: 'sticky', left: 0, bgcolor: 'grey.50', zIndex: 3, minWidth: 160, borderRight: '1px solid', borderColor: 'divider', py: 0.75 }}>
-                    Product
-                  </TableCell>
-                  <TableCell sx={{ fontWeight: 700, fontSize: 11, whiteSpace: 'nowrap', textAlign: 'center', py: 0.75, minWidth: 80 }}>Category</TableCell>
-                  <TableCell sx={{ fontWeight: 700, fontSize: 11, whiteSpace: 'nowrap', textAlign: 'center', py: 0.75, minWidth: 40 }}>Unit</TableCell>
-                  <TableCell sx={{ fontWeight: 700, fontSize: 11, whiteSpace: 'nowrap', textAlign: 'center', py: 0.75, minWidth: 72, bgcolor: 'info.lighter', color: 'info.dark' }}>
-                    System Stock
-                  </TableCell>
-                  <TableCell sx={{ fontWeight: 700, fontSize: 11, whiteSpace: 'nowrap', textAlign: 'center', py: 0.75, minWidth: 72, bgcolor: 'primary.lighter', color: 'primary.dark' }}>
-                    Actual Stock *
-                  </TableCell>
-                  <TableCell sx={{ fontWeight: 700, fontSize: 11, whiteSpace: 'nowrap', textAlign: 'center', py: 0.75, minWidth: 64 }}>Variance</TableCell>
-                  <TableCell sx={{ fontWeight: 700, fontSize: 11, whiteSpace: 'nowrap', textAlign: 'center', py: 0.75, minWidth: 108, bgcolor: 'primary.lighter', color: 'primary.dark' }}>
-                    Photo *
-                  </TableCell>
-                  <TableCell sx={{ fontWeight: 700, fontSize: 11, whiteSpace: 'nowrap', py: 0.75, minWidth: 130 }}>Notes</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {details.map((d, idx) => {
-                  const photos = photosByDetail[d.detailId] || [];
-                  return (
-                    <TableRow key={d.detailId} sx={{ '&:last-child td': { border: 0 } }}>
-                      <TableCell sx={{ position: 'sticky', left: 0, bgcolor: 'background.paper', zIndex: 1, borderRight: '1px solid', borderColor: 'divider', py: 0.5 }}>
-                        <Typography variant="body2" sx={{ fontWeight: 500, fontSize: 12 }}>{d.productName}</Typography>
-                        <Typography variant="caption" sx={{ fontFamily: 'monospace', color: 'text.disabled', fontSize: 10 }}>{d.productCode}</Typography>
-                      </TableCell>
-                      <TableCell align="center" sx={{ py: 0.5 }}><Typography variant="caption" sx={{ fontSize: 11 }}>{d.categoryName}</Typography></TableCell>
-                      <TableCell align="center" sx={{ py: 0.5 }}><Typography variant="caption" sx={{ fontSize: 11 }}>{d.uomName}</Typography></TableCell>
-                      <TableCell align="center" sx={{ py: 0.5 }}>
-                        <Chip label={d.systemStock} size="small" color="info" variant="outlined" sx={{ fontFamily: 'monospace', fontWeight: 700, fontSize: 10, height: 20 }} />
-                      </TableCell>
-                      <TableCell align="center" sx={{ py: 0.5 }}>
-                        <TextField
-                          size="small"
-                          type="number"
-                          value={d.actualStock}
-                          onChange={(e) => updateDetail(idx, 'actualStock', numField(e.target.value))}
-                          sx={{ width: 64 }}
-                          slotProps={{ htmlInput: { min: 0 } }}
-                        />
-                      </TableCell>
-                      <TableCell align="center" sx={{ py: 0.5 }}>
-                        <Typography
-                          variant="caption"
-                          sx={{
-                            fontFamily: 'monospace',
-                            fontWeight: 700,
-                            fontSize: 11,
-                            color: d.varianceQty !== 0 ? 'error.main' : 'success.main',
-                          }}
-                        >
-                          {d.varianceQty > 0 ? '+' : ''}{d.varianceQty}
-                        </Typography>
-                      </TableCell>
-                      <TableCell align="center" sx={{ py: 0.5, bgcolor: 'grey.50' }}>
-                        <MiniPhotoPicker
-                          photos={photos}
-                          onPhotosChange={(p) => handlePhotosChange(d.detailId, p)}
-                          minPhotos={3}
-                        />
-                      </TableCell>
-                      <TableCell sx={{ py: 0.5 }}>
-                        <TextField
-                          size="small"
-                          placeholder="—"
-                          value={d.notes}
-                          onChange={(e) => updateDetail(idx, 'notes', e.target.value)}
-                          sx={{ width: '100%' }}
-                          slotProps={{ htmlInput: { style: { fontSize: 12 } } }}
-                        />
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </TableContainer>
+          <Box sx={{ overflowX: 'auto', '&::-webkit-scrollbar': { height: 6 }, '&::-webkit-scrollbar-thumb': { bgcolor: 'divider', borderRadius: 3 } }}>
+            <TableContainer
+              sx={{
+                border: '1px solid',
+                borderColor: 'divider',
+                borderRadius: 1,
+                maxHeight: 460,
+              }}
+            >
+              <Table size="small" stickyHeader sx={{ minWidth: { xs: 800, sm: 'auto' } }}>
+                <TableHead>
+                  <TableRow sx={{ bgcolor: '#F0F4FA' }}>
+                    <TableCell sx={{ fontWeight: 700, fontSize: 11, whiteSpace: 'nowrap', position: 'sticky', left: 0, bgcolor: '#F0F4FA', zIndex: 3, minWidth: 160, borderRight: '1px solid', borderColor: 'divider', py: 0.75 }}>
+                      Product
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: 700, fontSize: 11, whiteSpace: 'nowrap', textAlign: 'center', py: 0.75, minWidth: 80, bgcolor: '#F0F4FA' }}>Category</TableCell>
+                    <TableCell sx={{ fontWeight: 700, fontSize: 11, whiteSpace: 'nowrap', textAlign: 'center', py: 0.75, minWidth: 40, bgcolor: '#F0F4FA' }}>Unit</TableCell>
+                    <TableCell sx={{ fontWeight: 700, fontSize: 11, whiteSpace: 'nowrap', textAlign: 'center', py: 0.75, minWidth: 72, bgcolor: 'info.lighter', color: 'info.dark' }}>
+                      System Stock
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: 700, fontSize: 11, whiteSpace: 'nowrap', textAlign: 'center', py: 0.75, minWidth: 72, bgcolor: 'primary.lighter', color: 'primary.dark' }}>
+                      Actual Stock *
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: 700, fontSize: 11, whiteSpace: 'nowrap', textAlign: 'center', py: 0.75, minWidth: 64, bgcolor: '#F0F4FA' }}>Variance</TableCell>
+                    <TableCell sx={{ fontWeight: 700, fontSize: 11, whiteSpace: 'nowrap', textAlign: 'center', py: 0.75, minWidth: 108, bgcolor: 'primary.lighter', color: 'primary.dark' }}>
+                      Photo *
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: 700, fontSize: 11, whiteSpace: 'nowrap', py: 0.75, minWidth: 130, bgcolor: '#F0F4FA' }}>Notes</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {details.map((d, idx) => {
+                    const photos = photosByDetail[d.detailId] || [];
+                    return (
+                      <TableRow key={d.detailId} sx={{ '&:last-child td': { border: 0 } }}>
+                        <TableCell sx={{ position: 'sticky', left: 0, bgcolor: 'background.paper', zIndex: 1, borderRight: '1px solid', borderColor: 'divider', py: 0.5 }}>
+                          <Typography variant="body2" sx={{ fontWeight: 500, fontSize: 12 }}>{d.productName}</Typography>
+                          <Typography variant="caption" sx={{ fontFamily: 'monospace', color: 'text.disabled', fontSize: 10 }}>{d.productCode}</Typography>
+                        </TableCell>
+                        <TableCell align="center" sx={{ py: 0.5, bgcolor: 'background.paper' }}><Typography variant="caption" sx={{ fontSize: 11 }}>{d.categoryName}</Typography></TableCell>
+                        <TableCell align="center" sx={{ py: 0.5, bgcolor: 'background.paper' }}><Typography variant="caption" sx={{ fontSize: 11 }}>{d.uomName}</Typography></TableCell>
+                        <TableCell align="center" sx={{ py: 0.5, bgcolor: 'background.paper' }}>
+                          <Chip label={d.systemStock} size="small" color="info" variant="outlined" sx={{ fontFamily: 'monospace', fontWeight: 700, fontSize: 10, height: 20 }} />
+                        </TableCell>
+                        <TableCell align="center" sx={{ py: 0.5, bgcolor: 'background.paper' }}>
+                          <TextField
+                            size="small"
+                            type="number"
+                            value={d.actualStock}
+                            onChange={(e) => updateDetail(idx, 'actualStock', numField(e.target.value))}
+                            sx={{ width: 64 }}
+                            slotProps={{ htmlInput: { min: 0 } }}
+                          />
+                        </TableCell>
+                        <TableCell align="center" sx={{ py: 0.5, bgcolor: 'background.paper' }}>
+                          <Typography
+                            variant="caption"
+                            sx={{
+                              fontFamily: 'monospace',
+                              fontWeight: 700,
+                              fontSize: 11,
+                              color: d.varianceQty !== 0 ? 'error.main' : 'success.main',
+                            }}
+                          >
+                            {d.varianceQty > 0 ? '+' : ''}{d.varianceQty}
+                          </Typography>
+                        </TableCell>
+                        <TableCell align="center" sx={{ py: 0.5, bgcolor: '#F0F4FA' }}>
+                          <MiniPhotoPicker
+                            photos={photos}
+                            onPhotosChange={(p) => handlePhotosChange(d.detailId, p)}
+                            minPhotos={3}
+                          />
+                        </TableCell>
+                        <TableCell sx={{ py: 0.5, bgcolor: 'background.paper' }}>
+                          <TextField
+                            size="small"
+                            placeholder="—"
+                            value={d.notes}
+                            onChange={(e) => updateDetail(idx, 'notes', e.target.value)}
+                            sx={{ width: '100%' }}
+                            slotProps={{ htmlInput: { style: { fontSize: 12 } } }}
+                          />
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Box>
 
           <Typography variant="caption" color="text.disabled" sx={{ display: 'block', mt: 0.75, fontSize: 10 }}>
             * Enter physical count. Variance auto-calculated. Min 3 photos per product.
@@ -419,7 +418,7 @@ export default function HubCkStockOpnamePage() {
               Save Draft
             </Button>
             <Button variant="contained" size="small" startIcon={<SendIcon sx={{ fontSize: 15 }} />} onClick={() => handleSave(true)}
-              sx={{ bgcolor: ACCENT, '&:hover': { bgcolor: '#bf360c' } }}>
+              sx={{ bgcolor: '#C62828', '&:hover': { bgcolor: '#b71c1c' } }}>
               Submit
             </Button>
           </Box>
@@ -472,12 +471,12 @@ function MiniPhotoPicker({ photos, onPhotosChange, minPhotos }: MiniPhotoPickerP
       <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.25 }}>
         <Box sx={{ display: 'flex', gap: 0.25, flexWrap: 'wrap', justifyContent: 'center' }}>
           {photos.map((src, idx) => (
-            <Box key={idx} sx={{ position: 'relative', width: 28, height: 28 }}>
+            <Box key={idx} sx={{ position: 'relative', width: { xs: 24, sm: 28 }, height: { xs: 24, sm: 28 } }}>
               <Box
                 component="img"
                 src={src}
                 alt={`Photo ${idx + 1}`}
-                sx={{ width: 28, height: 28, borderRadius: 0.5, objectFit: 'cover', border: '1px solid', borderColor: 'divider' }}
+                sx={{ width: { xs: 24, sm: 28 }, height: { xs: 24, sm: 28 }, borderRadius: 0.5, objectFit: 'cover', border: '1px solid', borderColor: 'divider' }}
               />
               <IconButton
                 size="small"

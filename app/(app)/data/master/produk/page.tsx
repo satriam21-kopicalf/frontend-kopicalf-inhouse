@@ -1,14 +1,15 @@
 'use client';
 
-import { useState } from 'react';
-import { Box, Typography, Snackbar, Alert } from '@mui/material';
+import { useState, useEffect } from 'react';
+import { Box, Typography, Snackbar, Alert, CircularProgress, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import { useMemo } from 'react';
 import PageHeader from '@/components/PageHeader';
 import ModernTable from '@/components/ModernTable';
 import DataDrawer, { DrawerField, DrawerMode } from '@/components/DataDrawer';
 import { TableColumn } from '@/components/ModernTable';
-import { MOCK_PRODUCTS, MOCK_CATEGORIES, MOCK_BOM_DATA, Product } from '@/lib/mockData';
+import { Product } from '@/lib/api/client';
+import { apiClient } from '@/lib/api/client';
 
 const TYPE_OPTIONS = [
   { value: 'Beverage', label: 'Beverage' },
@@ -50,9 +51,13 @@ const emptyValues = (): Record<string, unknown> => ({
 });
 
 export default function ProdukPage() {
-  const [data, setData] = useState<Product[]>(() =>
-    [...MOCK_PRODUCTS].sort((a, b) => a.name.localeCompare(b.name))
-  );
+  const [data, setData] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [allCategories, setAllCategories] = useState<{ categoryId: number; name: string }[]>([]);
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
+  const [categoryFilter, setCategoryFilter] = useState<number | 'all'>('all');
+  const [typeFilter, setTypeFilter] = useState<'all' | 'Beverage' | 'Food' | 'Ingredient' | 'Other'>('all');
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerMode, setDrawerMode] = useState<DrawerMode>(null);
@@ -61,15 +66,37 @@ export default function ProdukPage() {
   const [saving, setSaving] = useState(false);
   const [snack, setSnack] = useState({ open: false, msg: '', sev: 'success' as 'success' | 'error' });
 
+  // Fetch products and categories from real API
+  useEffect(() => {
+    Promise.all([
+      apiClient.getProducts(),
+      apiClient.getCategories() as Promise<{ categoryId: number; name: string }[]>,
+    ]).then(([products, categories]) => {
+      setData(products.sort((a, b) => a.name.localeCompare(b.name)));
+      setAllCategories(categories.map(c => ({ categoryId: c.categoryId, name: c.name })));
+    }).catch(err => {
+      setError(err instanceof Error ? err.message : 'Failed to load products');
+    }).finally(() => setLoading(false));
+  }, []);
+
   const categoryOptions = useMemo(() =>
-    MOCK_CATEGORIES.map((c) => ({ value: c.categoryId, label: c.name })),
-    []
+    allCategories.map((c) => ({ value: c.categoryId, label: c.name })),
+    [allCategories]
   );
 
   const fieldsWithOptions = useMemo(() =>
     FIELDS.map((f) => f.name === 'categoryId' ? { ...f, options: categoryOptions } : f),
     [categoryOptions]
   );
+
+  const filtered = useMemo(() => {
+    return data.filter(r => {
+      if (statusFilter !== 'all' && ((r.flagActive ?? true) !== (statusFilter === 'active'))) return false;
+      if (categoryFilter !== 'all' && r.categoryId !== categoryFilter) return false;
+      if (typeFilter !== 'all' && r.categoryTypeName !== typeFilter) return false;
+      return true;
+    });
+  }, [data, statusFilter, categoryFilter, typeFilter]);
 
   const showSnack = (msg: string, sev: 'success' | 'error' = 'success') => {
     setSnack({ open: true, msg, sev });
@@ -90,15 +117,11 @@ export default function ProdukPage() {
     setValues((prev) => {
       const next = { ...prev, [name]: value };
       if (name === 'categoryId') {
-        const cat = MOCK_CATEGORIES.find((c) => c.categoryId === Number(value));
+        const cat = allCategories.find((c) => c.categoryId === Number(value));
         if (cat) {
           next.categoryName = cat.name;
-          next.categoryTypeName = cat.type;
+          next.categoryTypeName = 'Other';
         }
-      }
-      if (name === 'bomId' && typeof value === 'number') {
-        const bom = MOCK_BOM_DATA.find((b) => b.bomId === value);
-        next.bomName = bom?.name ?? '';
       }
       return next;
     });
@@ -106,46 +129,52 @@ export default function ProdukPage() {
 
   const handleSave = async () => {
     setSaving(true);
-    await new Promise((r) => setTimeout(r, 600));
-    const now = fmtNow();
-    if (drawerMode === 'add') {
-      const cat = MOCK_CATEGORIES.find((c) => c.categoryId === Number(values.categoryId));
-      const newProd: Product = {
-        productId: Number(values.productId),
-        esbId: 0,
-        productCode: String(values.productCode ?? ''),
-        name: String(values.name ?? ''),
-        categoryId: Number(values.categoryId),
-        categoryName: cat?.name ?? '',
-        subCategoryId: Number(values.subCategoryId ?? 0),
-        subCategoryName: '',
-        bomId: values.bomId != null && values.bomId !== '' ? Number(values.bomId) : null,
-        bomName: String(values.bomName ?? ''),
-        categoryTypeName: String(values.categoryTypeName ?? 'Beverage'),
-        normalizedName: String(values.normalizedName ?? ''),
-        flagActive: Boolean(values.flagActive),
-        syncedAt: fmtNow(),
-        updatedAt: now,
-      };
-      setData((prev) => [...prev, newProd].sort((a, b) => a.name.localeCompare(b.name)));
-      showSnack('Product added successfully');
-    } else if (drawerMode === 'edit' && selected) {
-      const updated: Product = { ...selected, ...values, categoryId: Number(values.categoryId), updatedAt: now } as Product;
-      setData((prev) => prev.map((d) => d.productId === updated.productId ? updated : d).sort((a, b) => a.name.localeCompare(b.name)));
-      showSnack('Product updated successfully');
+    try {
+      const now = fmtNow();
+      if (drawerMode === 'add') {
+        const cat = allCategories.find((c) => c.categoryId === Number(values.categoryId));
+        const newProd: Product = {
+          productId: Number(values.productId) || Date.now(),
+          esbId: 0,
+          productCode: String(values.productCode ?? ''),
+          name: String(values.name ?? ''),
+          categoryId: Number(values.categoryId),
+          categoryName: cat?.name ?? '',
+          subCategoryId: Number(values.subCategoryId ?? 0),
+          subCategoryName: '',
+          bomId: values.bomId != null && values.bomId !== '' ? Number(values.bomId) : null,
+          bomName: String(values.bomName ?? ''),
+          categoryTypeName: String(values.categoryTypeName ?? 'Beverage') as Product['categoryTypeName'],
+          normalizedName: String(values.normalizedName ?? ''),
+          flagActive: Boolean(values.flagActive),
+          syncedAt: fmtNow(),
+          updatedAt: now,
+        };
+        setData((prev) => [...prev, newProd].sort((a, b) => a.name.localeCompare(b.name)));
+        showSnack('Product added successfully');
+      } else if (drawerMode === 'edit' && selected) {
+        const updated: Product = { ...selected, ...values, categoryId: Number(values.categoryId), updatedAt: now } as Product;
+        setData((prev) => prev.map((d) => d.productId === updated.productId ? updated : d).sort((a, b) => a.name.localeCompare(b.name)));
+        showSnack('Product updated successfully');
+      }
+      setDrawerOpen(false);
+    } catch (err) {
+      showSnack(err instanceof Error ? err.message : 'Failed to save product', 'error');
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
-    setDrawerOpen(false);
   };
 
   const handleDelete = async () => {
     if (!selected) return;
     setSaving(true);
-    await new Promise((r) => setTimeout(r, 500));
-    setData((prev) => prev.filter((d) => d.productId !== selected.productId));
-    showSnack('Product deleted', 'error');
-    setSaving(false);
-    setDrawerOpen(false);
+    try {
+      setData((prev) => prev.filter((d) => d.productId !== selected.productId));
+      showSnack('Product deleted', 'error');
+    } finally {
+      setSaving(false);
+      setDrawerOpen(false);
+    }
   };
 
   const columns: TableColumn<Product>[] = useMemo(() => [
@@ -202,14 +231,63 @@ export default function ProdukPage() {
     { label: 'Delete', icon: <DeleteIcon fontSize="small" />, color: 'error' as const, onClick: (r: unknown) => handleOpen('delete', r as Product), tooltip: 'Delete product' },
   ];
 
+  if (loading) {
+    return (
+      <Box>
+        <PageHeader title="Product" subtitle="Product master data — menu items, raw materials, and sale items" breadcrumbs={['Data', 'Product']} />
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}>
+          <CircularProgress />
+        </Box>
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box>
+        <PageHeader title="Product" subtitle="Product master data — menu items, raw materials, and sale items" breadcrumbs={['Data', 'Product']} />
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}>
+          <Alert severity="error" variant="filled">{error}</Alert>
+        </Box>
+      </Box>
+    );
+  }
+
   return (
     <Box>
       <PageHeader title="Product" subtitle="Product master data — menu items, raw materials, and sale items" breadcrumbs={['Data', 'Product']} />
+      <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap', alignItems: 'center' }}>
+        <FormControl size="small" sx={{ minWidth: 140 }}>
+          <InputLabel>Status</InputLabel>
+          <Select label="Status" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as 'all' | 'active' | 'inactive')}>
+            <MenuItem value="all">All</MenuItem>
+            <MenuItem value="active">Active</MenuItem>
+            <MenuItem value="inactive">Inactive</MenuItem>
+          </Select>
+        </FormControl>
+        <FormControl size="small" sx={{ minWidth: 160 }}>
+          <InputLabel>Category</InputLabel>
+          <Select label="Category" value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value as number | 'all')}>
+            <MenuItem value="all">All Categories</MenuItem>
+            {allCategories.map(c => <MenuItem key={c.categoryId} value={c.categoryId}>{c.name}</MenuItem>)}
+          </Select>
+        </FormControl>
+        <FormControl size="small" sx={{ minWidth: 130 }}>
+          <InputLabel>Type</InputLabel>
+          <Select label="Type" value={typeFilter} onChange={(e) => setTypeFilter(e.target.value as 'all' | 'Beverage' | 'Food' | 'Ingredient' | 'Other')}>
+            <MenuItem value="all">All Types</MenuItem>
+            <MenuItem value="Beverage">Beverage</MenuItem>
+            <MenuItem value="Food">Food</MenuItem>
+            <MenuItem value="Ingredient">Ingredient</MenuItem>
+            <MenuItem value="Other">Other</MenuItem>
+          </Select>
+        </FormControl>
+      </Box>
       <ModernTable
         title="Products"
-        subtitle={`${data.length} total products`}
+        subtitle={`${filtered.length} of ${data.length} products`}
         columns={columns}
-        data={data}
+        data={filtered}
         keyField="productId"
         actions={actions}
         searchPlaceholder="Search by name, code, or category..."
