@@ -423,6 +423,11 @@ export async function getMasterEntityRows(
   entity: string,
   options?: { limit?: number; offset?: number; search?: string }
 ): Promise<MasterEntityResponse> {
+  // Use mock data when USE_MOCK_DATA is enabled
+  if (USE_MOCK_DATA) {
+    return getMockMasterEntityRows(entity, options);
+  }
+
   const params = new URLSearchParams();
   if (options?.limit) params.set('limit', String(options.limit));
   if (options?.offset) params.set('offset', String(options.offset ?? 0));
@@ -435,6 +440,90 @@ export async function getMasterEntityRows(
     cache: 'no-store',
   });
   return handleResponse<MasterEntityResponse>(response);
+}
+
+/**
+ * Mock data helper for master entity rows
+ */
+async function getMockMasterEntityRows(
+  entity: string,
+  options?: { limit?: number; offset?: number; search?: string }
+): Promise<MasterEntityResponse> {
+  const limit = options?.limit ?? 500;
+  const offset = options?.offset ?? 0;
+
+  // Dynamic import mock data
+  const { MOCK_BRANCHES, MOCK_PRODUCTS } = await import('@/lib/mockData');
+
+  let rows: MasterEntityRow[] = [];
+
+  switch (entity.toUpperCase()) {
+    case 'BRANCH':
+      // Map MOCK_BRANCHES to DB column format
+      rows = MOCK_BRANCHES.map((b) => ({
+        id: b.branchID,
+        company_id: 1,
+        esb_id: b.esbId,
+        name: b.branchName,
+        branch_code: b.branchCode,
+        branch_type: b.branchType,
+        is_active: b.isActive,
+        location_name: b.address,
+        stock: 0,
+        available_stock: 0,
+        raw_data: b,
+        synced_at: b.syncedAt,
+        updated_at: b.updatedAt,
+      }));
+      break;
+
+    case 'PRODUCT':
+      // Map MOCK_PRODUCTS to DB column format
+      rows = MOCK_PRODUCTS.map((p) => ({
+        id: p.productId,
+        esb_id: p.esbId,
+        code: p.productCode,
+        name: p.name,
+        category_id: p.categoryId,
+        category_name: p.categoryName,
+        sub_category_id: p.subCategoryId,
+        sub_category_name: p.subCategoryName,
+        bom_id: p.bomId,
+        bom_name: p.bomName,
+        type: p.categoryTypeName,
+        normalized_name: p.normalizedName,
+        is_active: p.flagActive,
+        synced_at: p.syncedAt,
+        updated_at: p.updatedAt,
+      }));
+      break;
+
+    default:
+      // Return empty rows for unhandled entities
+      rows = [];
+  }
+
+  // Apply search filter if provided
+  if (options?.search) {
+    const searchLower = options.search.toLowerCase();
+    rows = rows.filter((r) =>
+      Object.values(r).some((v) =>
+        String(v).toLowerCase().includes(searchLower)
+      )
+    );
+  }
+
+  const total = rows.length;
+  // Apply pagination
+  rows = rows.slice(offset, offset + limit);
+
+  return {
+    entity: entity.toUpperCase(),
+    table: `master_${entity.toLowerCase()}`,
+    columns: rows.length > 0 ? Object.keys(rows[0]) : [],
+    rows,
+    total,
+  };
 }
 
 /**
