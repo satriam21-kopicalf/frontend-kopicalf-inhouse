@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { message } from 'antd';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
+const API_BASE = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://187.52.114.14:8005/api/v1';
 
 export default function LoginPage() {
   const router = useRouter();
