@@ -3,11 +3,20 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
-export default function Home() {
+export default function LogoutPage() {
   const router = useRouter();
 
   useEffect(() => {
-    router.replace('/auth/login');
+    // Clear session/auth data
+    localStorage.removeItem('auth_token');
+    sessionStorage.clear();
+
+    // Redirect to login after brief delay
+    const timer = setTimeout(() => {
+      router.replace('/auth/login');
+    }, 500);
+
+    return () => clearTimeout(timer);
   }, [router]);
 
   return (
@@ -28,6 +37,7 @@ export default function Home() {
           animation: 'spin 0.8s linear infinite',
           margin: '0 auto 16px'
         }} />
+        <p style={{ color: '#8A8A8A', fontSize: 14 }}>Signing out...</p>
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     </div>
